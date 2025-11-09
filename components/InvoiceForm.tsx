@@ -28,9 +28,105 @@ const NOTE_PRESETS = [
   'Usługa nie podlega opodatkowaniu VAT w Polsce — miejsce świadczenia poza terytorium UE (art. 28b ustawy o VAT).',
 ];
 
+const MAX_RATE_LOOKBACK_DAYS = 10;
+
+function toDateString(date: Date): string {
+  return date.toISOString().split('T')[0];
+}
+
+function getPreviousBusinessDay(): string {
+  const date = new Date();
+  date.setUTCHours(0, 0, 0, 0);
+  date.setUTCDate(date.getUTCDate() - 1);
+
+  while (date.getUTCDay() === 0 || date.getUTCDay() === 6) {
+    date.setUTCDate(date.getUTCDate() - 1);
+  }
+
+  return toDateString(date);
+}
+
+function shiftDateString(dateString: string, offset: number): string {
+  const [year, month, day] = dateString.split('-').map(Number);
+  const date = new Date(Date.UTC(year, month - 1, day));
+  date.setUTCDate(date.getUTCDate() + offset);
+  return toDateString(date);
+}
+
 export function InvoiceForm({ invoiceData, setInvoiceData }: InvoiceFormProps) {
   const [savedSellers, setSavedSellers] = useState<SavedCompany[]>([]);
   const [savedBuyers, setSavedBuyers] = useState<SavedCompany[]>([]);
+  const [rateFetchTrigger, setRateFetchTrigger] = useState(0);
+  const [rateStatus, setRateStatus] = useState<{ loading: boolean; error: string | null }>({
+    loading: false,
+    error: null,
+  });
+  const isForeignCurrency = invoiceData.currency !== 'PLN';
+  const maxRateDate = getPreviousBusinessDay();
+
+  const handleCurrencyChange = (value: string) => {
+    setInvoiceData(prev => {
+      if (value === 'PLN') {
+        return {
+          ...prev,
+          currency: value,
+          exchangeRate: {
+            targetDate: '',
+            effectiveDate: '',
+            value: null,
+          },
+        };
+      }
+
+      return {
+        ...prev,
+        currency: value,
+        exchangeRate: {
+          targetDate: prev.exchangeRate.targetDate || getPreviousBusinessDay(),
+          effectiveDate: '',
+          value: null,
+        },
+      };
+    });
+    setRateStatus({ loading: false, error: null });
+  };
+
+  const handleRateDateChange = (value: string) => {
+    const sanitized = value ? (value > maxRateDate ? maxRateDate : value) : '';
+    setInvoiceData(prev => ({
+      ...prev,
+      exchangeRate: {
+        ...prev.exchangeRate,
+        targetDate: sanitized,
+        effectiveDate: '',
+        value: null,
+      },
+    }));
+    setRateStatus(current => ({ ...current, error: null }));
+  };
+
+  const handleUsePreviousBusinessDay = () => {
+    const previousDay = getPreviousBusinessDay();
+    setInvoiceData(prev => ({
+      ...prev,
+      exchangeRate: {
+        ...prev.exchangeRate,
+        targetDate: previousDay,
+        effectiveDate: '',
+        value: null,
+      },
+    }));
+    setRateStatus(current => ({ ...current, error: null }));
+    setRateFetchTrigger(prev => prev + 1);
+  };
+
+  const handleRefreshRate = () => {
+    if (!invoiceData.exchangeRate.targetDate) {
+      return;
+    }
+    setRateStatus(current => ({ ...current, error: null }));
+    setRateFetchTrigger(prev => prev + 1);
+  };
 
   useEffect(() => {
     // Load saved companies from localStorage
@@ -39,6 +135,152 @@ export function InvoiceForm({ invoiceData, setInvoiceData }: InvoiceFormProps) {
     if (sellers) setSavedSellers(JSON.parse(sellers));
     if (buyers) setSavedBuyers(JSON.parse(buyers));
   }, []);
+
+  useEffect(() => {
+    if (invoiceData.currency === 'PLN') {
+      if (
+        invoiceData.exchangeRate.targetDate ||
+        invoiceData.exchangeRate.effectiveDate ||
+        invoiceData.exchangeRate.value !== null
+      ) {
+        setInvoiceData(prev => ({
+          ...prev,
+          exchangeRate: {
+            targetDate: '',
+            effectiveDate: '',
+            value: null,
+          },
+        }));
+      }
+      setRateStatus({ loading: false, error: null });
+      return;
+    }
+
+    if (!invoiceData.exchangeRate.targetDate) {
+      const defaultDate = getPreviousBusinessDay();
+      setInvoiceData(prev => ({
+        ...prev,
+        exchangeRate: {
+          ...prev.exchangeRate,
+          targetDate: defaultDate,
+        },
+      }));
+    }
+  }, [invoiceData.currency, invoiceData.exchangeRate.targetDate]);
+
+  useEffect(() => {
+    if (invoiceData.currency === 'PLN') {
+      return;
+    }
+
+    const targetDate = invoiceData.exchangeRate.targetDate;
+    if (!targetDate) {
+      return;
+    }
+
+    let isCancelled = false;
+    const controller = new AbortController();
+
+    const fetchRate = async () => {
+      setRateStatus({ loading: true, error: null });
+      let lookupDate = targetDate;
+      let attempts = 0;
+      let fetched = false;
+
+      while (!isCancelled && attempts < MAX_RATE_LOOKBACK_DAYS) {
+        try {
+          const response = await fetch(
+            `https://api.nbp.pl/api/exchangerates/rates/A/${invoiceData.currency}/${lookupDate}/?format=json`,
+            {
+              signal: controller.signal,
+              headers: {
+                Accept: 'application/json',
+              },
+            }
+          );
+
+          if (response.status === 404) {
+            lookupDate = shiftDateString(lookupDate, -1);
+            attempts += 1;
+            continue;
+          }
+
+          if (!response.ok) {
+            throw new Error('Nie udało się pobrać kursu NBP.');
+          }
+
+          const data = await response.json();
+          const rate = data?.rates?.[0];
+          if (!rate || typeof rate.mid !== 'number') {
+            throw new Error('Brak danych kursu NBP dla wybranej daty.');
+          }
+
+          if (isCancelled) {
+            return;
+          }
+
+          setInvoiceData(prev => ({
+            ...prev,
+            exchangeRate: {
+              targetDate,
+              effectiveDate: rate.effectiveDate,
+              value: rate.mid,
+            },
+          }));
+          setRateStatus({ loading: false, error: null });
+          fetched = true;
+          break;
+        } catch (error: any) {
+          if (isCancelled || controller.signal.aborted) {
+            return;
+          }
+          if (error.name === 'AbortError') {
+            return;
+          }
+          setRateStatus({
+            loading: false,
+            error: error?.message || 'Błąd podczas pobierania kursu NBP.',
+          });
+          setInvoiceData(prev => ({
+            ...prev,
+            exchangeRate: {
+              targetDate,
+              effectiveDate: '',
+              value: null,
+            },
+          }));
+          toast.error(error?.message || 'Nie udało się pobrać kursu NBP.');
+          return;
+        }
+      }
+
+      if (!isCancelled && !fetched) {
+        const message = 'Brak kursu NBP dla wybranej daty w ostatnich dniach roboczych.';
+        setRateStatus({ loading: false, error: message });
+        setInvoiceData(prev => ({
+          ...prev,
+          exchangeRate: {
+            targetDate,
+            effectiveDate: '',
+            value: null,
+          },
+        }));
+        toast.error(message);
+      }
+    };
+
+    fetchRate();
+
+    return () => {
+      isCancelled = true;
+      controller.abort();
+    };
+  }, [
+    invoiceData.currency,
+    invoiceData.exchangeRate.targetDate,
+    rateFetchTrigger,
+    setInvoiceData,
+  ]);
 
   const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -233,7 +475,7 @@ export function InvoiceForm({ invoiceData, setInvoiceData }: InvoiceFormProps) {
                 <Label htmlFor="currency">Waluta</Label>
                 <Select
                   value={invoiceData.currency}
-                  onValueChange={(value) => setInvoiceData(prev => ({ ...prev, currency: value }))}
+                  onValueChange={handleCurrencyChange}
                 >
                   <SelectTrigger id="currency">
                     <SelectValue />
@@ -247,6 +489,70 @@ export function InvoiceForm({ invoiceData, setInvoiceData }: InvoiceFormProps) {
                 </Select>
               </div>
             </div>
+            {isForeignCurrency && (
+              <div className="rounded-lg border border-indigo-100 bg-indigo-50/60 p-4 text-sm space-y-3">
+                <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_auto] md:items-end">
+                  <div>
+                    <Label htmlFor="exchangeRateDate">Data kursu NBP</Label>
+                    <Input
+                      id="exchangeRateDate"
+                      type="date"
+                      max={maxRateDate}
+                      min="2002-01-02"
+                      value={invoiceData.exchangeRate.targetDate}
+                      onChange={(e) => handleRateDateChange(e.target.value)}
+                    />
+                    <p className="mt-1 text-xs text-gray-500">
+                      Domyślnie pobieramy kurs średni z poprzedniego dnia roboczego.
+                    </p>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={handleUsePreviousBusinessDay}
+                      disabled={rateStatus.loading}
+                    >
+                      Poprzedni dzień roboczy
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={handleRefreshRate}
+                      disabled={rateStatus.loading}
+                    >
+                      Odśwież kurs
+                    </Button>
+                  </div>
+                </div>
+                <div className="text-sm">
+                  {rateStatus.loading && <span className="text-gray-600">Pobieranie kursu z NBP...</span>}
+                  {!rateStatus.loading && invoiceData.exchangeRate.value !== null && invoiceData.exchangeRate.effectiveDate && (
+                    <span className="text-gray-700">
+                      Kurs średni NBP (tabela A) z dnia {invoiceData.exchangeRate.effectiveDate}:{' '}
+                      <strong>{invoiceData.exchangeRate.value.toFixed(4)} PLN</strong>
+                    </span>
+                  )}
+                  {!rateStatus.loading && invoiceData.exchangeRate.value === null && !rateStatus.error && (
+                    <span className="text-gray-600">Wybierz datę, aby pobrać kurs średni z NBP.</span>
+                  )}
+                </div>
+                {rateStatus.error && (
+                  <p className="text-sm text-red-600">{rateStatus.error}</p>
+                )}
+                {!rateStatus.loading &&
+                  invoiceData.exchangeRate.targetDate &&
+                  invoiceData.exchangeRate.effectiveDate &&
+                  invoiceData.exchangeRate.targetDate !== invoiceData.exchangeRate.effectiveDate && (
+                    <p className="text-xs text-gray-500">
+                      Wybrana data nie była dniem publikacji NBP. Zastosowano kurs z dnia{' '}
+                      {invoiceData.exchangeRate.effectiveDate}.
+                    </p>
+                  )}
+              </div>
+            )}
             <div className="grid grid-cols-3 gap-4">
               <div>
                 <Label htmlFor="issueDate">Data wystawienia *</Label>

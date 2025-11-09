@@ -16,6 +16,12 @@ export interface InvoiceItem {
   vatRate: number;
 }
 
+export interface ExchangeRateInfo {
+  targetDate: string;
+  effectiveDate: string;
+  value: number | null;
+}
+
 export interface InvoiceData {
   invoiceNumber: string;
   issueDate: string;
@@ -28,6 +34,7 @@ export interface InvoiceData {
   items: InvoiceItem[];
   notes: string;
   logo: string | null;
+  exchangeRate: ExchangeRateInfo;
 }
 
 export interface InvoiceCalculations {

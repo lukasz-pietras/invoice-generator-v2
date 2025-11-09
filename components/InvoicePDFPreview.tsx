@@ -57,6 +57,38 @@ function formatDate(dateString: string): string {
 
 export function InvoicePDFPreview({ invoiceData }: InvoicePDFPreviewProps) {
   const calculations = calculateInvoice(invoiceData);
+  const exchangeRate = invoiceData.exchangeRate;
+  const conversionRate =
+    invoiceData.currency !== 'PLN' && exchangeRate.value !== null ? exchangeRate.value : null;
+  const selectedRateDate = exchangeRate.targetDate;
+  const effectiveRateDate = exchangeRate.effectiveDate;
+  const shouldShowPlnBreakdown = invoiceData.currency !== 'PLN' && conversionRate !== null;
+  const rateValue = conversionRate ?? 0;
+  const plnItems = shouldShowPlnBreakdown
+    ? invoiceData.items.map((item, index) => {
+        const netAmount = item.quantity * item.netPrice;
+        const vatAmount = item.vatRate >= 0 ? (netAmount * item.vatRate) / 100 : 0;
+        const grossAmount = netAmount + vatAmount;
+        return {
+          index,
+          name: item.name,
+          quantity: item.quantity,
+          unit: item.unit,
+          vatRate: item.vatRate,
+          netUnitPln: item.netPrice * rateValue,
+          netAmountPln: netAmount * rateValue,
+          vatAmountPln: vatAmount * rateValue,
+          grossAmountPln: grossAmount * rateValue,
+        };
+      })
+    : [];
+  const plnTotals = shouldShowPlnBreakdown
+    ? {
+        net: calculations.netTotal * rateValue,
+        vat: calculations.vatTotal * rateValue,
+        gross: calculations.grossTotal * rateValue,
+      }
+    : null;
 
   const handleDownload = () => {
     // Create a simple HTML version for printing/PDF
@@ -311,6 +343,83 @@ export function InvoicePDFPreview({ invoiceData }: InvoicePDFPreviewProps) {
                 </tbody>
               </table>
             </div>
+
+            {shouldShowPlnBreakdown && plnTotals && (
+              <div className="mb-8">
+                <h3 className="mb-2 text-gray-700">Przeliczenie pozycji na PLN</h3>
+                <p className="mb-3 text-xs text-gray-500">
+                  Kurs średni NBP (tabela A) z dnia {effectiveRateDate || selectedRateDate || '—'} wynosi{' '}
+                  {conversionRate?.toFixed(4)} PLN.
+                  {selectedRateDate &&
+                    effectiveRateDate &&
+                    selectedRateDate !== effectiveRateDate &&
+                    ` (Wybrana data: ${selectedRateDate})`}
+                </p>
+                <table className="w-full mb-4 text-sm">
+                  <thead>
+                    <tr className="bg-gray-100">
+                      <th className="p-2 text-left border border-gray-300">Lp.</th>
+                      <th className="p-2 text-left border border-gray-300">Nazwa</th>
+                      <th className="p-2 text-center border border-gray-300">Ilość</th>
+                      <th className="p-2 text-center border border-gray-300">Jedn.</th>
+                      <th className="p-2 text-right border border-gray-300">Cena netto (PLN)</th>
+                      <th className="p-2 text-right border border-gray-300">Wartość netto (PLN)</th>
+                      <th className="p-2 text-center border border-gray-300">VAT</th>
+                      <th className="p-2 text-right border border-gray-300">Kwota VAT (PLN)</th>
+                      <th className="p-2 text-right border border-gray-300">Wartość brutto (PLN)</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {plnItems.map(item => {
+                      const vatDisplay = item.vatRate >= 0 ? `${item.vatRate}%` : 'zw.';
+                      return (
+                        <tr key={item.index}>
+                          <td className="p-2 border border-gray-300">{item.index + 1}</td>
+                          <td className="p-2 border border-gray-300">{item.name || '___________'}</td>
+                          <td className="p-2 text-center border border-gray-300">{item.quantity}</td>
+                          <td className="p-2 text-center border border-gray-300">{item.unit}</td>
+                          <td className="p-2 text-right border border-gray-300">
+                            {formatCurrency(item.netUnitPln, 'PLN')}
+                          </td>
+                          <td className="p-2 text-right border border-gray-300">
+                            {formatCurrency(item.netAmountPln, 'PLN')}
+                          </td>
+                          <td className="p-2 text-center border border-gray-300">{vatDisplay}</td>
+                          <td className="p-2 text-right border border-gray-300">
+                            {formatCurrency(item.vatAmountPln, 'PLN')}
+                          </td>
+                          <td className="p-2 text-right border border-gray-300">
+                            {formatCurrency(item.grossAmountPln, 'PLN')}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+                <table className="ml-auto w-2/3 text-sm">
+                  <tbody>
+                    <tr>
+                      <td className="p-2 text-right border border-gray-300">Razem netto (PLN):</td>
+                      <td className="p-2 text-right border border-gray-300">
+                        {formatCurrency(plnTotals.net, 'PLN')}
+                      </td>
+                    </tr>
+                    <tr>
+                      <td className="p-2 text-right border border-gray-300">Razem VAT (PLN):</td>
+                      <td className="p-2 text-right border border-gray-300">
+                        {formatCurrency(plnTotals.vat, 'PLN')}
+                      </td>
+                    </tr>
+                    <tr className="bg-gray-100">
+                      <td className="p-2 text-right border border-gray-300">Do zapłaty (PLN):</td>
+                      <td className="p-2 text-right border border-gray-300">
+                        {formatCurrency(plnTotals.gross, 'PLN')}
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            )}
 
             {/* Payment Info */}
             <div className="mb-6 text-sm">

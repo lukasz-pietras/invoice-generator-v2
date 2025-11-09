@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { InvoiceForm } from './components/InvoiceForm';
 import { InvoicePDFPreview } from './components/InvoicePDFPreview';
-import { InvoiceData, InvoiceItem } from './types/invoice';
+import { InvoiceData } from './types/invoice';
 import { Toaster } from './components/ui/sonner';
 
 export default function App() {
@@ -39,6 +39,11 @@ export default function App() {
     ],
     notes: '',
     logo: null,
+    exchangeRate: {
+      targetDate: '',
+      effectiveDate: '',
+      value: null,
+    },
   });
 
   return (

@@ -149,6 +149,37 @@
         line-height: 1.4;
       }
 
+      .exchange-rate-card {
+        border: 1px solid #dbeafe;
+        background: rgba(219, 234, 254, 0.45);
+        border-radius: 10px;
+        padding: 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .exchange-rate-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .exchange-rate-info {
+        font-size: 0.85rem;
+        color: #374151;
+      }
+
+      .exchange-rate-muted {
+        font-size: 0.8rem;
+        color: #6b7280;
+      }
+
+      .exchange-rate-error {
+        font-size: 0.85rem;
+        color: #dc2626;
+      }
+
       label {
         font-size: 0.9rem;
         font-weight: 600;
@@ -448,6 +479,31 @@
               </select>
             </label>
           </div>
+          <div class="exchange-rate-card" id="exchange-rate-card" hidden>
+            <label>
+              Data kursu NBP
+              <input
+                type="date"
+                id="exchange-rate-date"
+                data-field="exchangeRate.targetDate"
+                min="2002-01-02"
+              />
+            </label>
+            <p class="exchange-rate-muted">
+              Domyslnie pobieramy kurs sredni z poprzedniego dnia roboczego.
+            </p>
+            <div class="exchange-rate-actions">
+              <button type="button" class="btn btn-secondary" data-action="rate-prev-day">
+                Poprzedni dzien roboczy
+              </button>
+              <button type="button" class="btn btn-secondary" data-action="rate-refresh">
+                Odswiez kurs
+              </button>
+            </div>
+            <p class="exchange-rate-info" id="exchange-rate-info"></p>
+            <p class="exchange-rate-error" id="exchange-rate-error" style="display:none;"></p>
+            <p class="exchange-rate-muted" id="exchange-rate-warning" style="display:none;"></p>
+          </div>
         </div>
 
         <div class="section" aria-labelledby="logo">
@@ -682,6 +738,11 @@
         ],
         notes: "",
         logo: null,
+        exchangeRate: {
+          targetDate: "",
+          effectiveDate: "",
+          value: null,
+        },
       };
 
       let state = clone(defaultState);
@@ -699,6 +760,13 @@
       const itemsContainer = document.getElementById("items-container");
       const preview = document.getElementById("preview");
       const logoPreview = document.getElementById("logo-preview");
+      const exchangeRateCard = document.getElementById("exchange-rate-card");
+      const exchangeRateDateInput = document.getElementById("exchange-rate-date");
+      const exchangeRateInfo = document.getElementById("exchange-rate-info");
+      const exchangeRateError = document.getElementById("exchange-rate-error");
+      const exchangeRateWarning = document.getElementById("exchange-rate-warning");
+      let rateStatus = { loading: false, error: null };
+      let rateRequestId = 0;
 
       function clone(data) {
         return JSON.parse(JSON.stringify(data));
@@ -733,6 +801,180 @@
           },
           migrated,
         };
+      }
+
+      function toDateString(date) {
+        return date.toISOString().split("T")[0];
+      }
+
+      function getPreviousBusinessDay() {
+        const date = new Date();
+        date.setUTCHours(0, 0, 0, 0);
+        date.setUTCDate(date.getUTCDate() - 1);
+        while (date.getUTCDay() === 0 || date.getUTCDay() === 6) {
+          date.setUTCDate(date.getUTCDate() - 1);
+        }
+        return toDateString(date);
+      }
+
+      function shiftDateString(dateString, offset) {
+        const [year, month, day] = dateString.split("-").map(Number);
+        const date = new Date(Date.UTC(year, month - 1, day));
+        date.setUTCDate(date.getUTCDate() + offset);
+        return toDateString(date);
+      }
+
+      function sanitizeRateDate(value) {
+        if (!value) return "";
+        const max = getPreviousBusinessDay();
+        return value > max ? max : value;
+      }
+
+      async function fetchExchangeRateWithFallback(targetDate, currency) {
+        let lookupDate = targetDate;
+        let attempts = 0;
+        const maxAttempts = 10;
+
+        while (attempts < maxAttempts) {
+          const response = await fetch(
+            `https://api.nbp.pl/api/exchangerates/rates/A/${currency}/${lookupDate}/?format=json`,
+            { headers: { Accept: "application/json" } }
+          );
+
+          if (response.status === 404) {
+            lookupDate = shiftDateString(lookupDate, -1);
+            attempts += 1;
+            continue;
+          }
+
+          if (!response.ok) {
+            throw new Error("Nie udalo sie pobrac kursu NBP.");
+          }
+
+          const data = await response.json();
+          const rate = data?.rates?.[0];
+          if (!rate || typeof rate.mid !== "number") {
+            throw new Error("Brak danych kursu NBP dla wskazanej daty.");
+          }
+
+          return { value: rate.mid, effectiveDate: rate.effectiveDate };
+        }
+
+        throw new Error("Brak kursu NBP dla wybranej daty w ostatnich dniach roboczych.");
+      }
+
+      function updateExchangeRateUI() {
+        if (!exchangeRateCard) return;
+        const isForeign = state.currency !== "PLN";
+        exchangeRateCard.hidden = !isForeign;
+
+        if (exchangeRateDateInput) {
+          exchangeRateDateInput.max = getPreviousBusinessDay();
+          exchangeRateDateInput.value = state.exchangeRate.targetDate || "";
+        }
+
+        if (!isForeign) {
+          if (exchangeRateInfo) exchangeRateInfo.textContent = "";
+          if (exchangeRateError) exchangeRateError.style.display = "none";
+          if (exchangeRateWarning) exchangeRateWarning.style.display = "none";
+          return;
+        }
+
+        if (rateStatus.loading) {
+          if (exchangeRateInfo) exchangeRateInfo.textContent = "Pobieranie kursu z NBP...";
+        } else if (state.exchangeRate.value !== null && state.exchangeRate.effectiveDate) {
+          if (exchangeRateInfo) {
+            exchangeRateInfo.textContent = `Kurs sredni NBP (tabela A) z dnia ${state.exchangeRate.effectiveDate}: ${state.exchangeRate.value.toFixed(4)} PLN.`;
+          }
+        } else {
+          if (exchangeRateInfo) {
+            exchangeRateInfo.textContent = "Wybierz date, aby pobrac kurs sredni z NBP.";
+          }
+        }
+
+        if (exchangeRateError) {
+          if (rateStatus.error) {
+            exchangeRateError.style.display = "block";
+            exchangeRateError.textContent = rateStatus.error;
+          } else {
+            exchangeRateError.style.display = "none";
+            exchangeRateError.textContent = "";
+          }
+        }
+
+        if (exchangeRateWarning) {
+          if (
+            state.exchangeRate.targetDate &&
+            state.exchangeRate.effectiveDate &&
+            state.exchangeRate.targetDate !== state.exchangeRate.effectiveDate
+          ) {
+            exchangeRateWarning.style.display = "block";
+            exchangeRateWarning.textContent = `Wybrana data nie byla dniem publikacji tabeli. Uzyto kursu z ${state.exchangeRate.effectiveDate}.`;
+          } else {
+            exchangeRateWarning.style.display = "none";
+            exchangeRateWarning.textContent = "";
+          }
+        }
+      }
+
+      async function ensureExchangeRate({ forceRefresh = false } = {}) {
+        if (state.currency === "PLN") {
+          state.exchangeRate = { targetDate: "", effectiveDate: "", value: null };
+          rateStatus = { loading: false, error: null };
+          updateExchangeRateUI();
+          renderPreview();
+          return;
+        }
+
+        if (!state.exchangeRate.targetDate) {
+          state.exchangeRate.targetDate = getPreviousBusinessDay();
+        }
+
+        if (
+          !forceRefresh &&
+          state.exchangeRate.value !== null &&
+          state.exchangeRate.effectiveDate
+        ) {
+          updateExchangeRateUI();
+          return;
+        }
+
+        if (!state.exchangeRate.targetDate) {
+          updateExchangeRateUI();
+          return;
+        }
+
+        rateRequestId += 1;
+        const requestId = rateRequestId;
+        rateStatus = { loading: true, error: null };
+        updateExchangeRateUI();
+
+        try {
+          const result = await fetchExchangeRateWithFallback(
+            state.exchangeRate.targetDate,
+            state.currency
+          );
+          if (requestId !== rateRequestId) {
+            return;
+          }
+          state.exchangeRate.value = result.value;
+          state.exchangeRate.effectiveDate = result.effectiveDate;
+          rateStatus = { loading: false, error: null };
+          updateExchangeRateUI();
+          renderPreview();
+        } catch (error) {
+          if (requestId !== rateRequestId) {
+            return;
+          }
+          state.exchangeRate.value = null;
+          state.exchangeRate.effectiveDate = "";
+          rateStatus = {
+            loading: false,
+            error: error?.message || "Nie udalo sie pobrac kursu NBP.",
+          };
+          updateExchangeRateUI();
+          renderPreview();
+        }
       }
 
       function persistStorage() {
@@ -801,7 +1043,50 @@
         const path = event.target.dataset.field;
         if (!path) return;
         const { type, value } = event.target;
-        setNested(path, type === "number" ? parseFloat(value) || 0 : value);
+
+        if (path === "exchangeRate.targetDate") {
+          if (event.type === "input") {
+            return;
+          }
+          const sanitized = sanitizeRateDate(value);
+          if (exchangeRateDateInput && exchangeRateDateInput.value !== sanitized) {
+            exchangeRateDateInput.value = sanitized;
+          }
+          setNested(path, sanitized);
+          state.exchangeRate.effectiveDate = "";
+          state.exchangeRate.value = null;
+          updateExchangeRateUI();
+          if (sanitized) {
+            ensureExchangeRate({ forceRefresh: true });
+          } else {
+            renderPreview();
+          }
+          return;
+        }
+
+        const parsedValue = type === "number" ? parseFloat(value) || 0 : value;
+        setNested(path, parsedValue);
+
+        if (path === "currency") {
+          handleCurrencyChange();
+        }
+      }
+
+      function handleCurrencyChange() {
+        if (state.currency === "PLN") {
+          state.exchangeRate = { targetDate: "", effectiveDate: "", value: null };
+          rateStatus = { loading: false, error: null };
+          updateExchangeRateUI();
+          renderPreview();
+          return;
+        }
+
+        state.exchangeRate.targetDate =
+          state.exchangeRate.targetDate || getPreviousBusinessDay();
+        state.exchangeRate.effectiveDate = "";
+        state.exchangeRate.value = null;
+        updateExchangeRateUI();
+        ensureExchangeRate({ forceRefresh: true });
       }
 
       function addItem() {
@@ -871,9 +1156,9 @@
         });
       }
 
-      function formatCurrency(amount) {
+      function formatCurrency(amount, currency = state.currency) {
         const symbols = { PLN: "zl", EUR: "EUR", USD: "USD", GBP: "GBP" };
-        return `${amount.toFixed(2)} ${symbols[state.currency] || state.currency}`;
+        return `${amount.toFixed(2)} ${symbols[currency] || currency}`;
       }
 
       function formatDate(value) {
@@ -917,6 +1202,92 @@
 
       function renderPreview() {
         const totals = calculateTotals();
+        const showPlnBreakdown =
+          state.currency !== "PLN" && typeof state.exchangeRate.value === "number";
+        const rateValue = showPlnBreakdown ? state.exchangeRate.value : 0;
+        const plnTotals = showPlnBreakdown
+          ? {
+              net: totals.netTotal * rateValue,
+              vat: totals.vatTotal * rateValue,
+              gross: totals.grossTotal * rateValue,
+            }
+          : null;
+        const plnRowsHtml = showPlnBreakdown
+          ? state.items
+              .map((item, index) => {
+                const net = item.quantity * item.netPrice;
+                const vat = item.vatRate >= 0 ? (net * item.vatRate) / 100 : 0;
+                const gross = net + vat;
+                const vatLabel = item.vatRate >= 0 ? item.vatRate + "%" : "zw.";
+                return `
+                  <tr>
+                    <td class="num">${index + 1}</td>
+                    <td>${item.name || "-"}</td>
+                    <td class="num">${item.quantity.toFixed(2)}</td>
+                    <td>${item.unit || ""}</td>
+                    <td class="num">${formatCurrency(item.netPrice * rateValue, "PLN")}</td>
+                    <td class="num">${formatCurrency(net * rateValue, "PLN")}</td>
+                    <td class="num">${vatLabel}</td>
+                    <td class="num">${formatCurrency(vat * rateValue, "PLN")}</td>
+                    <td class="num">${formatCurrency(gross * rateValue, "PLN")}</td>
+                  </tr>
+                `;
+              })
+              .join("")
+          : "";
+        const plnSummaryHtml = showPlnBreakdown
+          ? `
+          <div class="summary" style="margin-top:18px;">
+            <div style="font-weight:600;">Przeliczenie pozycji na PLN</div>
+            <p class="exchange-rate-muted" style="margin-top:6px;">
+              Kurs sredni NBP (tabela A) z dnia ${
+                state.exchangeRate.effectiveDate || state.exchangeRate.targetDate || "-"
+              }: ${state.exchangeRate.value.toFixed(4)} PLN${
+              state.exchangeRate.targetDate &&
+              state.exchangeRate.effectiveDate &&
+              state.exchangeRate.targetDate !== state.exchangeRate.effectiveDate
+                ? ` (wybrana data: ${state.exchangeRate.targetDate})`
+                : ""
+            }.
+            </p>
+            <table>
+              <thead>
+                <tr>
+                  <th style="width:40px;">Lp.</th>
+                  <th>Nazwa</th>
+                  <th style="width:80px;">Ilosc</th>
+                  <th style="width:80px;">Jedn.</th>
+                  <th style="width:120px;">Cena netto (PLN)</th>
+                  <th style="width:150px;">Wartosc netto (PLN)</th>
+                  <th style="width:90px;">VAT</th>
+                  <th style="width:150px;">Kwota VAT (PLN)</th>
+                  <th style="width:150px;">Wartosc brutto (PLN)</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${
+                  plnRowsHtml ||
+                  `<tr><td colspan="9" style="text-align:center;padding:24px;">Brak pozycji</td></tr>`
+                }
+              </tbody>
+            </table>
+            <div class="summary">
+              <div>
+                <span>Suma netto (PLN)</span>
+                <strong>${formatCurrency(plnTotals.net, "PLN")}</strong>
+              </div>
+              <div>
+                <span>Suma VAT (PLN)</span>
+                <strong>${formatCurrency(plnTotals.vat, "PLN")}</strong>
+              </div>
+              <div style="font-size:1.1rem;">
+                <span>Suma brutto (PLN)</span>
+                <strong>${formatCurrency(plnTotals.gross, "PLN")}</strong>
+              </div>
+            </div>
+          </div>
+        `
+          : "";
         preview.innerHTML = `
           <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;">
             <div>
@@ -1057,6 +1428,7 @@
               </tbody>
             </table>
           </div>
+          ${plnSummaryHtml}
           <div class="notes">
             <strong>Uwagi:</strong><br/>
             ${state.notes ? state.notes.replace(/\n/g, "<br/>") : "Brak"}
@@ -1363,6 +1735,7 @@
         }
         renderItems();
         renderLogo();
+        updateExchangeRateUI();
       }
 
       function renderLogo() {
@@ -1436,6 +1809,93 @@
             `
           )
           .join("");
+
+        const showPlnBreakdown =
+          state.currency !== "PLN" && typeof state.exchangeRate.value === "number";
+        const rateValue = showPlnBreakdown ? state.exchangeRate.value : 0;
+        const plnTotalsDownload = showPlnBreakdown
+          ? {
+              net: totals.netTotal * rateValue,
+              vat: totals.vatTotal * rateValue,
+              gross: totals.grossTotal * rateValue,
+            }
+          : null;
+        const plnItemRows = showPlnBreakdown
+          ? state.items
+              .map((item, index) => {
+                const net = item.quantity * item.netPrice;
+                const vat = item.vatRate >= 0 ? (net * item.vatRate) / 100 : 0;
+                const gross = net + vat;
+                const vatLabel = item.vatRate >= 0 ? item.vatRate + "%" : "zw.";
+                return `
+                  <tr>
+                    <td>${index + 1}</td>
+                    <td>${item.name || "-"}</td>
+                    <td class="num">${item.quantity.toFixed(2)}</td>
+                    <td>${item.unit || ""}</td>
+                    <td class="num">${formatCurrency(item.netPrice * rateValue, "PLN")}</td>
+                    <td class="num">${formatCurrency(net * rateValue, "PLN")}</td>
+                    <td class="num">${vatLabel}</td>
+                    <td class="num">${formatCurrency(vat * rateValue, "PLN")}</td>
+                    <td class="num">${formatCurrency(gross * rateValue, "PLN")}</td>
+                  </tr>
+                `;
+              })
+              .join("")
+          : "";
+        const plnSection = showPlnBreakdown
+          ? `
+            <div class="summary">
+              <div style="font-weight:600;">Przeliczenie pozycji na PLN</div>
+              <p style="margin-top:6px;color:#6b7280;font-size:0.85rem;">
+                Kurs sredni NBP (tabela A) z dnia ${
+                  state.exchangeRate.effectiveDate || state.exchangeRate.targetDate || "-"
+                }: ${state.exchangeRate.value.toFixed(4)} PLN${
+                state.exchangeRate.targetDate &&
+                state.exchangeRate.effectiveDate &&
+                state.exchangeRate.targetDate !== state.exchangeRate.effectiveDate
+                  ? ` (wybrana data: ${state.exchangeRate.targetDate})`
+                  : ""
+              }.
+              </p>
+              <table>
+                <thead>
+                  <tr>
+                    <th style="width:40px;">Lp.</th>
+                    <th>Nazwa</th>
+                    <th style="width:80px;">Ilosc</th>
+                    <th style="width:80px;">Jedn.</th>
+                    <th style="width:120px;">Cena netto (PLN)</th>
+                    <th style="width:150px;">Wartosc netto (PLN)</th>
+                    <th style="width:90px;">VAT</th>
+                    <th style="width:150px;">Kwota VAT (PLN)</th>
+                    <th style="width:150px;">Wartosc brutto (PLN)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${
+                    plnItemRows ||
+                    `<tr><td colspan="9" style="text-align:center;padding:12px;">Brak pozycji</td></tr>`
+                  }
+                </tbody>
+              </table>
+              <div class="summary">
+                <div>
+                  <span>Suma netto (PLN)</span>
+                  <strong>${formatCurrency(plnTotalsDownload.net, "PLN")}</strong>
+                </div>
+                <div>
+                  <span>Suma VAT (PLN)</span>
+                  <strong>${formatCurrency(plnTotalsDownload.vat, "PLN")}</strong>
+                </div>
+                <div style="font-size:1.1rem;">
+                  <span>Suma brutto (PLN)</span>
+                  <strong>${formatCurrency(plnTotalsDownload.gross, "PLN")}</strong>
+                </div>
+              </div>
+            </div>
+          `
+          : "";
 
         printWin.document.write(`
           <!DOCTYPE html>
@@ -1542,6 +2002,7 @@
                   }
                 </tbody>
               </table>
+              ${plnSection}
               <div class="notes">
                 <strong>Uwagi:</strong><br/>
                 ${state.notes ? state.notes.replace(/\n/g, "<br/>") : "Brak"}
@@ -1582,6 +2043,31 @@
           .getElementById("export-btn")
           .addEventListener("click", exportData);
 
+        const ratePrevButton = document.querySelector("[data-action='rate-prev-day']");
+        if (ratePrevButton) {
+          ratePrevButton.addEventListener("click", () => {
+            state.exchangeRate.targetDate = getPreviousBusinessDay();
+            state.exchangeRate.effectiveDate = "";
+            state.exchangeRate.value = null;
+            updateExchangeRateUI();
+            ensureExchangeRate({ forceRefresh: true });
+          });
+        }
+
+        const rateRefreshButton = document.querySelector("[data-action='rate-refresh']");
+        if (rateRefreshButton) {
+          rateRefreshButton.addEventListener("click", () => {
+            if (state.currency === "PLN") {
+              return;
+            }
+            if (!state.exchangeRate.targetDate) {
+              state.exchangeRate.targetDate = getPreviousBusinessDay();
+            }
+            updateExchangeRateUI();
+            ensureExchangeRate({ forceRefresh: true });
+          });
+        }
+
         document
           .querySelector("[data-action='save-seller']")
           .addEventListener("click", () => saveCompany("seller"));
@@ -1621,6 +2107,9 @@
       }
 
       function init() {
+        if (!state.exchangeRate) {
+          state.exchangeRate = { targetDate: "", effectiveDate: "", value: null };
+        }
         if (!state.seller.name) {
           const firstSeller = Object.keys(storedData.seller)[0];
           if (firstSeller) {
@@ -1637,6 +2126,9 @@
         populateCompanySelect("buyer");
         syncForm();
         renderPreview();
+        if (state.currency !== "PLN") {
+          ensureExchangeRate();
+        }
         attachEvents();
       }
 
