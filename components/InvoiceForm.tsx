@@ -23,6 +23,11 @@ interface SavedCompany {
   data: CompanyInfo;
 }
 
+const NOTE_PRESETS = [
+  'Zwolnienie z VAT na podstawie art. 113 ust. 1 ustawy o VAT.',
+  'Usługa nie podlega opodatkowaniu VAT w Polsce — miejsce świadczenia poza terytorium UE (art. 28b ustawy o VAT).',
+];
+
 export function InvoiceForm({ invoiceData, setInvoiceData }: InvoiceFormProps) {
   const [savedSellers, setSavedSellers] = useState<SavedCompany[]>([]);
   const [savedBuyers, setSavedBuyers] = useState<SavedCompany[]>([]);
@@ -70,6 +75,20 @@ export function InvoiceForm({ invoiceData, setInvoiceData }: InvoiceFormProps) {
         item.id === id ? { ...item, [field]: value } : item
       ),
     }));
+  };
+
+  const appendNote = (note: string) => {
+    setInvoiceData(prev => {
+      const current = prev.notes || '';
+      if (current.includes(note)) {
+        return prev;
+      }
+      const separator = current.trim().length > 0 ? '\n' : '';
+      return {
+        ...prev,
+        notes: `${current}${separator}${note}`,
+      };
+    });
   };
 
   const saveToCache = (data: CompanyInfo, type: 'seller' | 'buyer') => {
@@ -498,9 +517,23 @@ export function InvoiceForm({ invoiceData, setInvoiceData }: InvoiceFormProps) {
             <Textarea
               value={invoiceData.notes}
               onChange={(e) => setInvoiceData(prev => ({ ...prev, notes: e.target.value }))}
-              placeholder="Dodatkowe uwagi do faktury (opcjonalne)"
+              placeholder="Dodatkowe informacje dla nabywcy"
               rows={3}
             />
+            <div className="flex flex-wrap gap-2">
+              {NOTE_PRESETS.map((note) => (
+                <Button
+                  key={note}
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="text-left whitespace-normal"
+                  onClick={() => appendNote(note)}
+                >
+                  {note}
+                </Button>
+              ))}
+            </div>
           </Card>
         </div>
       </ScrollArea>

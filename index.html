@@ -134,6 +134,21 @@
         grid-template-columns: repeat(2, minmax(0, 1fr));
       }
 
+      .note-buttons {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 8px;
+      }
+
+      .note-buttons .btn {
+        justify-content: flex-start;
+        align-items: flex-start;
+        text-align: left;
+        white-space: normal;
+        line-height: 1.4;
+      }
+
       label {
         font-size: 0.9rem;
         font-weight: 600;
@@ -549,6 +564,22 @@
         <div class="section" aria-labelledby="notes">
           <h2 id="notes">Uwagi</h2>
           <textarea data-field="notes" placeholder="Dodatkowe informacje dla nabywcy"></textarea>
+          <div class="note-buttons">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-note="Zwolnienie z VAT na podstawie art. 113 ust. 1 ustawy o VAT."
+            >
+              Zwolnienie z VAT na podstawie art. 113 ust. 1 ustawy o VAT.
+            </button>
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-note="Usługa nie podlega opodatkowaniu VAT w Polsce — miejsce świadczenia poza terytorium UE (art. 28b ustawy o VAT)."
+            >
+              Usługa nie podlega opodatkowaniu VAT w Polsce — miejsce świadczenia poza terytorium UE (art. 28b ustawy o VAT).
+            </button>
+          </div>
         </div>
       </section>
 
@@ -1568,6 +1599,25 @@
         document
           .getElementById("download-btn")
           .addEventListener("click", downloadInvoice);
+
+        const notesField = document.querySelector("[data-field='notes']");
+        document
+          .querySelectorAll("[data-note]")
+          .forEach((button) => {
+            button.addEventListener("click", () => {
+              if (!notesField) return;
+              const note = button.dataset.note || "";
+              if (!note) return;
+              const current = notesField.value || "";
+              if (current.includes(note)) {
+                return;
+              }
+              const separator = current.trim().length ? "\n" : "";
+              const updated = current + separator + note;
+              notesField.value = updated;
+              setNested("notes", updated);
+            });
+          });
       }
 
       function init() {
