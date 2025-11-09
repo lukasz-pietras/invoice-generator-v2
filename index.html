@@ -409,6 +409,13 @@
         gap: 8px;
       }
 
+      .summary-heading {
+        margin: 0;
+        font-weight: 600;
+        font-size: 0.65rem;
+        color: #374151;
+      }
+
       .totals-grid {
         display: grid;
         grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -430,24 +437,19 @@
 
       .totals-label {
         margin: 0;
-        font-size: 0.68rem;
-        letter-spacing: 0.1em;
+        font-size: 0.65rem;
+        letter-spacing: 0.08em;
         text-transform: uppercase;
         color: #6b7280;
       }
 
       .totals-value {
         margin: 6px 0 0;
-        font-size: 0.95rem;
+        font-size: 0.8rem;
         font-weight: 600;
         color: #1f2937;
       }
 
-      .summary div {
-        display: flex;
-        justify-content: space-between;
-        font-size: 0.9rem;
-      }
 
       .summary div strong {
         font-weight: 700;
@@ -1379,7 +1381,7 @@
         const plnSummaryHtml = showPlnBreakdown
           ? `
           <div class="summary" style="margin-top:14px;">
-            <div style="font-weight:600;">Przeliczenie pozycji na PLN</div>
+            <div class="summary-heading">Przeliczenie pozycji na PLN</div>
             <p class="exchange-rate-muted" style="margin:4px 0 8px;font-size:0.55rem;line-height:1.35;">
               Kurs sredni NBP (tabela A) z dnia ${
                 state.exchangeRate.effectiveDate || state.exchangeRate.targetDate || "-"
@@ -1412,18 +1414,18 @@
                 }
               </tbody>
             </table>
-            <div class="summary">
-              <div>
-                <span>Suma netto (PLN)</span>
-                <strong> ${formatCurrency(plnTotals.net, "PLN")}</strong>
+            <div class="totals-grid">
+              <div class="totals-card">
+                <p class="totals-label">Suma netto (PLN)</p>
+                <p class="totals-value">${formatCurrency(plnTotals.net, "PLN")}</p>
               </div>
-              <div>
-                <span>Suma VAT (PLN)</span>
-                <strong> ${formatCurrency(plnTotals.vat, "PLN")}</strong>
+              <div class="totals-card">
+                <p class="totals-label">Suma VAT (PLN)</p>
+                <p class="totals-value">${formatCurrency(plnTotals.vat, "PLN")}</p>
               </div>
-              <div style="font-size:1rem;">
-                <span>Suma brutto (PLN)</span>
-                <strong> ${formatCurrency(plnTotals.gross, "PLN")}</strong>
+              <div class="totals-card totals-card--highlight">
+                <p class="totals-label">Suma brutto (PLN)</p>
+                <p class="totals-value">${formatCurrency(plnTotals.gross, "PLN")}</p>
               </div>
             </div>
           </div>
@@ -1539,7 +1541,7 @@
             </div>
           </div>
           <div class="summary" style="margin-top:16px;">
-            <div style="font-weight:600;">Zestawienie VAT</div>
+            <div class="summary-heading">Zestawienie VAT</div>
             <table>
               <thead>
                 <tr>

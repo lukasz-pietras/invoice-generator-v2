@@ -7,6 +7,13 @@ interface InvoicePDFPreviewProps {
   invoiceData: InvoiceData;
 }
 
+interface TotalsCardProps {
+  label: string;
+  value: string;
+  highlight?: boolean;
+  suffix?: string;
+}
+
 function isPercentageRate(rate: number): boolean {
   return rate >= 0;
 }
@@ -78,6 +85,25 @@ function formatDate(dateString: string): string {
   if (!dateString) return '';
   const date = new Date(dateString);
   return date.toLocaleDateString('pl-PL');
+}
+
+function TotalsCard({ label, value, highlight = false, suffix }: TotalsCardProps) {
+  const backgroundClass = highlight ? 'bg-blue-50' : 'bg-gray-50';
+  const labelColorClass = highlight ? 'text-gray-600' : 'text-gray-500';
+
+  return (
+    <div className={`rounded border border-gray-300 ${backgroundClass} px-3 py-2`}>
+      <p
+        className={`flex items-baseline justify-between text-[10px] uppercase tracking-[0.18em] ${labelColorClass} leading-tight`}
+      >
+        <span className="whitespace-nowrap">{label}</span>
+        {suffix ? (
+          <span className="ml-2 text-[8px] tracking-[0.12em] text-gray-400">{suffix}</span>
+        ) : null}
+      </p>
+      <p className="text-sm font-semibold text-gray-900">{value}</p>
+    </div>
+  );
 }
 
 export function InvoicePDFPreview({ invoiceData }: InvoicePDFPreviewProps) {
@@ -371,28 +397,21 @@ export function InvoicePDFPreview({ invoiceData }: InvoicePDFPreviewProps) {
 
             {/* Totals */}
             <div className="mb-5">
-              <table className="ml-auto w-3/5 text-xs">
-                <tbody>
-                  <tr>
-                    <td className="px-2 py-1.5 text-right border border-gray-300">Razem netto:</td>
-                    <td className="px-2 py-1.5 text-right border border-gray-300">
-                      {formatCurrency(calculations.netTotal, invoiceData.currency)}
-                    </td>
-                  </tr>
-                  <tr>
-                    <td className="px-2 py-1.5 text-right border border-gray-300">Razem VAT:</td>
-                    <td className="px-2 py-1.5 text-right border border-gray-300">
-                      {formatCurrency(calculations.vatTotal, invoiceData.currency)}
-                    </td>
-                  </tr>
-                  <tr className="bg-gray-100">
-                    <td className="px-2 py-1.5 text-right border border-gray-300">Do zapłaty:</td>
-                    <td className="px-2 py-1.5 text-right border border-gray-300">
-                      {formatCurrency(calculations.grossTotal, invoiceData.currency)}
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
+              <div className="grid grid-cols-3 gap-3 text-xs">
+                <TotalsCard
+                  label="Suma netto"
+                  value={formatCurrency(calculations.netTotal, invoiceData.currency)}
+                />
+                <TotalsCard
+                  label="Suma VAT"
+                  value={formatCurrency(calculations.vatTotal, invoiceData.currency)}
+                />
+                <TotalsCard
+                  label="Suma brutto"
+                  value={formatCurrency(calculations.grossTotal, invoiceData.currency)}
+                  highlight
+                />
+              </div>
             </div>
 
             {shouldShowPlnBreakdown && plnTotals && (
@@ -447,28 +466,24 @@ export function InvoicePDFPreview({ invoiceData }: InvoicePDFPreviewProps) {
                     })}
                   </tbody>
                 </table>
-                <table className="ml-auto w-3/5 text-[8px]">
-                  <tbody>
-                    <tr>
-                      <td className="px-2 py-1.5 text-right border border-gray-300">Razem netto (PLN):</td>
-                      <td className="px-2 py-1.5 text-right border border-gray-300">
-                        {` ${formatCurrency(plnTotals.net, 'PLN')}`}
-                      </td>
-                    </tr>
-                    <tr>
-                      <td className="px-2 py-1.5 text-right border border-gray-300">Razem VAT (PLN):</td>
-                      <td className="px-2 py-1.5 text-right border border-gray-300">
-                        {` ${formatCurrency(plnTotals.vat, 'PLN')}`}
-                      </td>
-                    </tr>
-                    <tr className="bg-gray-100">
-                      <td className="px-2 py-1.5 text-right border border-gray-300">Do zapłaty (PLN):</td>
-                      <td className="px-2 py-1.5 text-right border border-gray-300">
-                        {` ${formatCurrency(plnTotals.gross, 'PLN')}`}
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
+                <div className="grid grid-cols-3 gap-3 text-xs">
+                  <TotalsCard
+                    label="Suma netto"
+                    suffix="(PLN)"
+                    value={formatCurrency(plnTotals.net, 'PLN')}
+                  />
+                  <TotalsCard
+                    label="Suma VAT"
+                    suffix="(PLN)"
+                    value={formatCurrency(plnTotals.vat, 'PLN')}
+                  />
+                  <TotalsCard
+                    label="Suma brutto"
+                    suffix="(PLN)"
+                    value={formatCurrency(plnTotals.gross, 'PLN')}
+                    highlight
+                  />
+                </div>
               </div>
             )}
 
