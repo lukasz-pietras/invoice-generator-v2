@@ -30,13 +30,30 @@ const NOTE_PRESETS = [
 
 const MAX_RATE_LOOKBACK_DAYS = 10;
 
+function parseISODate(dateString?: string): Date | null {
+  if (!dateString) return null;
+  const parts = dateString.split('-').map(Number);
+  if (parts.length !== 3) return null;
+  const [year, month, day] = parts;
+  if (
+    Number.isNaN(year) ||
+    Number.isNaN(month) ||
+    Number.isNaN(day)
+  ) {
+    return null;
+  }
+  return new Date(Date.UTC(year, month - 1, day));
+}
+
 function toDateString(date: Date): string {
   return date.toISOString().split('T')[0];
 }
 
-function getPreviousBusinessDay(): string {
-  const date = new Date();
-  date.setUTCHours(0, 0, 0, 0);
+function getPreviousBusinessDay(referenceDate?: string): string {
+  const base = parseISODate(referenceDate);
+  const today = new Date();
+  const source = base ?? new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate()));
+  const date = new Date(Date.UTC(source.getUTCFullYear(), source.getUTCMonth(), source.getUTCDate()));
   date.setUTCDate(date.getUTCDate() - 1);
 
   while (date.getUTCDay() === 0 || date.getUTCDay() === 6) {
@@ -61,15 +78,18 @@ export function InvoiceForm({ invoiceData, setInvoiceData }: InvoiceFormProps) {
     loading: false,
     error: null,
   });
-  const isForeignCurrency = invoiceData.currency !== 'PLN';
-  const maxRateDate = getPreviousBusinessDay();
+  const normalizedCurrency = (invoiceData.currency || '').trim().toUpperCase();
+  const isForeignCurrency = normalizedCurrency !== '' && normalizedCurrency !== 'PLN';
+  const maxRateDate = getPreviousBusinessDay(invoiceData.issueDate);
 
   const handleCurrencyChange = (value: string) => {
+    const normalizedValue = value.trim().toUpperCase();
     setInvoiceData(prev => {
-      if (value === 'PLN') {
+      const defaultTargetDate = getPreviousBusinessDay(prev.issueDate);
+      if (normalizedValue === 'PLN') {
         return {
           ...prev,
-          currency: value,
+          currency: normalizedValue,
           exchangeRate: {
             targetDate: '',
             effectiveDate: '',
@@ -80,9 +100,9 @@ export function InvoiceForm({ invoiceData, setInvoiceData }: InvoiceFormProps) {
 
       return {
         ...prev,
-        currency: value,
+        currency: normalizedValue,
         exchangeRate: {
-          targetDate: prev.exchangeRate.targetDate || getPreviousBusinessDay(),
+          targetDate: prev.exchangeRate.targetDate || defaultTargetDate,
           effectiveDate: '',
           value: null,
         },
@@ -106,7 +126,7 @@ export function InvoiceForm({ invoiceData, setInvoiceData }: InvoiceFormProps) {
   };
 
   const handleUsePreviousBusinessDay = () => {
-    const previousDay = getPreviousBusinessDay();
+    const previousDay = getPreviousBusinessDay(invoiceData.issueDate);
     setInvoiceData(prev => ({
       ...prev,
       exchangeRate: {
@@ -121,11 +141,52 @@ export function InvoiceForm({ invoiceData, setInvoiceData }: InvoiceFormProps) {
   };
 
   const handleRefreshRate = () => {
+    setRateStatus(current => ({ ...current, error: null }));
     if (!invoiceData.exchangeRate.targetDate) {
+      const previousDay = getPreviousBusinessDay(invoiceData.issueDate);
+      setInvoiceData(prev => ({
+        ...prev,
+        exchangeRate: {
+          ...prev.exchangeRate,
+          targetDate: previousDay,
+          effectiveDate: '',
+          value: null,
+        },
+      }));
+      setRateFetchTrigger(prev => prev + 1);
       return;
     }
-    setRateStatus(current => ({ ...current, error: null }));
     setRateFetchTrigger(prev => prev + 1);
+  };
+
+  const handleIssueDateChange = (value: string) => {
+    let shouldRefetch = false;
+    setInvoiceData(prev => {
+      const nextState = { ...prev, issueDate: value };
+      const prevCurrency = (prev.currency || '').trim().toUpperCase();
+      if (prevCurrency && prevCurrency !== 'PLN') {
+        const newDefault = getPreviousBusinessDay(value);
+        const previousDefault = getPreviousBusinessDay(prev.issueDate);
+        const targetWasDefault =
+          !prev.exchangeRate.targetDate || prev.exchangeRate.targetDate === previousDefault;
+        if (targetWasDefault) {
+          if (prev.exchangeRate.targetDate !== newDefault) {
+            shouldRefetch = true;
+            nextState.exchangeRate = {
+              ...prev.exchangeRate,
+              targetDate: newDefault,
+              effectiveDate: '',
+              value: null,
+            };
+          }
+        }
+      }
+      return nextState;
+    });
+    if (shouldRefetch) {
+      setRateStatus(current => ({ ...current, error: null }));
+      setRateFetchTrigger(prev => prev + 1);
+    }
   };
 
   useEffect(() => {
@@ -137,7 +198,7 @@ export function InvoiceForm({ invoiceData, setInvoiceData }: InvoiceFormProps) {
   }, []);
 
   useEffect(() => {
-    if (invoiceData.currency === 'PLN') {
+    if (!isForeignCurrency) {
       if (
         invoiceData.exchangeRate.targetDate ||
         invoiceData.exchangeRate.effectiveDate ||
@@ -157,7 +218,7 @@ export function InvoiceForm({ invoiceData, setInvoiceData }: InvoiceFormProps) {
     }
 
     if (!invoiceData.exchangeRate.targetDate) {
-      const defaultDate = getPreviousBusinessDay();
+      const defaultDate = getPreviousBusinessDay(invoiceData.issueDate);
       setInvoiceData(prev => ({
         ...prev,
         exchangeRate: {
@@ -166,10 +227,10 @@ export function InvoiceForm({ invoiceData, setInvoiceData }: InvoiceFormProps) {
         },
       }));
     }
-  }, [invoiceData.currency, invoiceData.exchangeRate.targetDate]);
+  }, [isForeignCurrency, invoiceData.exchangeRate.targetDate, invoiceData.issueDate]);
 
   useEffect(() => {
-    if (invoiceData.currency === 'PLN') {
+    if (!isForeignCurrency) {
       return;
     }
 
@@ -190,7 +251,7 @@ export function InvoiceForm({ invoiceData, setInvoiceData }: InvoiceFormProps) {
       while (!isCancelled && attempts < MAX_RATE_LOOKBACK_DAYS) {
         try {
           const response = await fetch(
-            `https://api.nbp.pl/api/exchangerates/rates/A/${invoiceData.currency}/${lookupDate}/?format=json`,
+            `https://api.nbp.pl/api/exchangerates/rates/A/${normalizedCurrency}/${lookupDate}/?format=json`,
             {
               signal: controller.signal,
               headers: {
@@ -275,12 +336,7 @@ export function InvoiceForm({ invoiceData, setInvoiceData }: InvoiceFormProps) {
       isCancelled = true;
       controller.abort();
     };
-  }, [
-    invoiceData.currency,
-    invoiceData.exchangeRate.targetDate,
-    rateFetchTrigger,
-    setInvoiceData,
-  ]);
+  }, [isForeignCurrency, invoiceData.exchangeRate.targetDate, rateFetchTrigger]);
 
   const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -560,7 +616,7 @@ export function InvoiceForm({ invoiceData, setInvoiceData }: InvoiceFormProps) {
                   id="issueDate"
                   type="date"
                   value={invoiceData.issueDate}
-                  onChange={(e) => setInvoiceData(prev => ({ ...prev, issueDate: e.target.value }))}
+                  onChange={(e) => handleIssueDateChange(e.target.value)}
                 />
               </div>
               <div>
@@ -799,15 +855,17 @@ export function InvoiceForm({ invoiceData, setInvoiceData }: InvoiceFormProps) {
                         value={item.vatRate.toString()}
                         onValueChange={(value) => updateItem(item.id, 'vatRate', parseFloat(value))}
                       >
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="23">23%</SelectItem>
-                          <SelectItem value="8">8%</SelectItem>
-                          <SelectItem value="5">5%</SelectItem>
-                          <SelectItem value="0">0%</SelectItem>
-                          <SelectItem value="-1">zw.</SelectItem>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="23">23%</SelectItem>
+                        <SelectItem value="8">8%</SelectItem>
+                        <SelectItem value="5">5%</SelectItem>
+                        <SelectItem value="0">0%</SelectItem>
+                        <SelectItem value="-1">ZW</SelectItem>
+                        <SelectItem value="-2">NP</SelectItem>
+                        <SelectItem value="-3">OO</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>

@@ -684,7 +684,9 @@
                 <option value="8">8%</option>
                 <option value="5">5%</option>
                 <option value="0">0%</option>
-                <option value="-1">zw.</option>
+                <option value="-1">ZW</option>
+                <option value="-2">NP</option>
+                <option value="-3">OO</option>
               </select>
             </label>
           </div>
@@ -803,13 +805,30 @@
         };
       }
 
+      function parseISODate(dateString) {
+        if (!dateString) return null;
+        const parts = dateString.split("-").map(Number);
+        if (parts.length !== 3) return null;
+        const [year, month, day] = parts;
+        if (
+          Number.isNaN(year) ||
+          Number.isNaN(month) ||
+          Number.isNaN(day)
+        ) {
+          return null;
+        }
+        return new Date(Date.UTC(year, month - 1, day));
+      }
+
       function toDateString(date) {
         return date.toISOString().split("T")[0];
       }
 
-      function getPreviousBusinessDay() {
-        const date = new Date();
-        date.setUTCHours(0, 0, 0, 0);
+      function getPreviousBusinessDay(referenceDate) {
+        const parsed = parseISODate(referenceDate);
+        const now = new Date();
+        const base = parsed ?? new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+        const date = new Date(Date.UTC(base.getUTCFullYear(), base.getUTCMonth(), base.getUTCDate()));
         date.setUTCDate(date.getUTCDate() - 1);
         while (date.getUTCDay() === 0 || date.getUTCDay() === 6) {
           date.setUTCDate(date.getUTCDate() - 1);
@@ -826,7 +845,7 @@
 
       function sanitizeRateDate(value) {
         if (!value) return "";
-        const max = getPreviousBusinessDay();
+        const max = getPreviousBusinessDay(state.issueDate);
         return value > max ? max : value;
       }
 
@@ -865,11 +884,13 @@
 
       function updateExchangeRateUI() {
         if (!exchangeRateCard) return;
-        const isForeign = state.currency !== "PLN";
+        const normalizedCurrency = (state.currency || "").trim().toUpperCase();
+        const isForeign = normalizedCurrency && normalizedCurrency !== "PLN";
         exchangeRateCard.hidden = !isForeign;
+        exchangeRateCard.style.display = isForeign ? "" : "none";
 
         if (exchangeRateDateInput) {
-          exchangeRateDateInput.max = getPreviousBusinessDay();
+          exchangeRateDateInput.max = getPreviousBusinessDay(state.issueDate);
           exchangeRateDateInput.value = state.exchangeRate.targetDate || "";
         }
 
@@ -918,7 +939,8 @@
       }
 
       async function ensureExchangeRate({ forceRefresh = false } = {}) {
-        if (state.currency === "PLN") {
+        const normalizedCurrency = (state.currency || "").trim().toUpperCase();
+        if (!normalizedCurrency || normalizedCurrency === "PLN") {
           state.exchangeRate = { targetDate: "", effectiveDate: "", value: null };
           rateStatus = { loading: false, error: null };
           updateExchangeRateUI();
@@ -927,7 +949,7 @@
         }
 
         if (!state.exchangeRate.targetDate) {
-          state.exchangeRate.targetDate = getPreviousBusinessDay();
+          state.exchangeRate.targetDate = getPreviousBusinessDay(state.issueDate);
         }
 
         if (
@@ -952,7 +974,7 @@
         try {
           const result = await fetchExchangeRateWithFallback(
             state.exchangeRate.targetDate,
-            state.currency
+            normalizedCurrency
           );
           if (requestId !== rateRequestId) {
             return;
@@ -1064,16 +1086,44 @@
           return;
         }
 
+        if (path === "issueDate") {
+          const previousIssueDate = state.issueDate;
+          setNested(path, value);
+          const normalizedCurrency = (state.currency || "").trim().toUpperCase();
+          if (normalizedCurrency && normalizedCurrency !== "PLN") {
+            const previousDefault = getPreviousBusinessDay(previousIssueDate);
+            const targetWasDefault =
+              !state.exchangeRate.targetDate ||
+              state.exchangeRate.targetDate === previousDefault;
+            if (targetWasDefault) {
+              state.exchangeRate.targetDate = getPreviousBusinessDay(value);
+              state.exchangeRate.effectiveDate = "";
+              state.exchangeRate.value = null;
+              updateExchangeRateUI();
+              ensureExchangeRate({ forceRefresh: true });
+              return;
+            }
+          }
+          updateExchangeRateUI();
+          return;
+        }
+
+        if (path === "currency") {
+          const normalized = String(value ?? "").trim().toUpperCase();
+          setNested(path, normalized);
+          handleCurrencyChange();
+          return;
+        }
+
         const parsedValue = type === "number" ? parseFloat(value) || 0 : value;
         setNested(path, parsedValue);
 
-        if (path === "currency") {
-          handleCurrencyChange();
-        }
       }
 
       function handleCurrencyChange() {
-        if (state.currency === "PLN") {
+        const normalizedCurrency = (state.currency || "").trim().toUpperCase();
+        state.currency = normalizedCurrency;
+        if (!normalizedCurrency || normalizedCurrency === "PLN") {
           state.exchangeRate = { targetDate: "", effectiveDate: "", value: null };
           rateStatus = { loading: false, error: null };
           updateExchangeRateUI();
@@ -1082,7 +1132,7 @@
         }
 
         state.exchangeRate.targetDate =
-          state.exchangeRate.targetDate || getPreviousBusinessDay();
+          state.exchangeRate.targetDate || getPreviousBusinessDay(state.issueDate);
         state.exchangeRate.effectiveDate = "";
         state.exchangeRate.value = null;
         updateExchangeRateUI();
@@ -1161,6 +1211,30 @@
         return `${amount.toFixed(2)} ${symbols[currency] || currency}`;
       }
 
+      function isPercentageRate(rate) {
+        return Number(rate) >= 0;
+      }
+
+      function calculateVatAmount(rate, net) {
+        return isPercentageRate(rate) ? (net * rate) / 100 : 0;
+      }
+
+      function getVatLabel(rate) {
+        if (isPercentageRate(rate)) {
+          return `${rate}%`;
+        }
+        switch (Number(rate)) {
+          case -1:
+            return "ZW";
+          case -2:
+            return "NP";
+          case -3:
+            return "OO";
+          default:
+            return "ZW";
+        }
+      }
+
       function formatDate(value) {
         if (!value) return "";
         try {
@@ -1174,7 +1248,7 @@
         const summary = {};
         state.items.forEach((item) => {
           const net = item.quantity * item.netPrice;
-          const vat = item.vatRate >= 0 ? (net * item.vatRate) / 100 : 0;
+          const vat = calculateVatAmount(item.vatRate, net);
           const gross = net + vat;
           summary[item.vatRate] ??= { net: 0, vat: 0, gross: 0 };
           summary[item.vatRate].net += net;
@@ -1216,9 +1290,9 @@
           ? state.items
               .map((item, index) => {
                 const net = item.quantity * item.netPrice;
-                const vat = item.vatRate >= 0 ? (net * item.vatRate) / 100 : 0;
+                const vat = calculateVatAmount(item.vatRate, net);
                 const gross = net + vat;
-                const vatLabel = item.vatRate >= 0 ? item.vatRate + "%" : "zw.";
+                const vatLabel = getVatLabel(item.vatRate);
                 return `
                   <tr>
                     <td class="num">${index + 1}</td>
@@ -1361,9 +1435,9 @@
                   ? state.items
                       .map((item, index) => {
                         const net = item.quantity * item.netPrice;
-                        const vat =
-                          item.vatRate >= 0 ? (net * item.vatRate) / 100 : 0;
+                        const vat = calculateVatAmount(item.vatRate, net);
                         const gross = net + vat;
+                        const vatLabel = getVatLabel(item.vatRate);
                         return `
                           <tr>
                             <td class="num">${index + 1}</td>
@@ -1372,7 +1446,7 @@
                             <td>${item.unit || ""}</td>
                             <td class="num">${formatCurrency(item.netPrice)}</td>
                             <td class="num">${formatCurrency(net)}</td>
-                            <td class="num">${item.vatRate >= 0 ? item.vatRate + "%" : "zw."}</td>
+                            <td class="num">${vatLabel}</td>
                             <td class="num">${formatCurrency(vat)}</td>
                             <td class="num">${formatCurrency(gross)}</td>
                           </tr>
@@ -1415,7 +1489,7 @@
                         .map(
                           (row) => `
                             <tr>
-                              <td>${row.rate >= 0 ? row.rate + "%" : "zw."}</td>
+                              <td>${getVatLabel(row.rate)}</td>
                               <td class="num">${formatCurrency(row.net)}</td>
                               <td class="num">${formatCurrency(row.vat)}</td>
                               <td class="num">${formatCurrency(row.gross)}</td>
@@ -1779,8 +1853,9 @@
         const itemRows = state.items
           .map((item, index) => {
             const net = item.quantity * item.netPrice;
-            const vat = item.vatRate >= 0 ? (net * item.vatRate) / 100 : 0;
+            const vat = calculateVatAmount(item.vatRate, net);
             const gross = net + vat;
+            const vatLabel = getVatLabel(item.vatRate);
             return `
               <tr>
                 <td>${index + 1}</td>
@@ -1789,7 +1864,7 @@
                 <td>${item.unit || ""}</td>
                 <td class="num">${formatCurrency(item.netPrice)}</td>
                 <td class="num">${formatCurrency(net)}</td>
-                <td class="num">${item.vatRate >= 0 ? item.vatRate + "%" : "zw."}</td>
+                <td class="num">${vatLabel}</td>
                 <td class="num">${formatCurrency(vat)}</td>
                 <td class="num">${formatCurrency(gross)}</td>
               </tr>
@@ -1801,7 +1876,7 @@
           .map(
             (row) => `
               <tr>
-                <td>${row.rate >= 0 ? row.rate + "%" : "zw."}</td>
+                <td>${getVatLabel(row.rate)}</td>
                 <td class="num">${formatCurrency(row.net)}</td>
                 <td class="num">${formatCurrency(row.vat)}</td>
                 <td class="num">${formatCurrency(row.gross)}</td>
@@ -1824,9 +1899,9 @@
           ? state.items
               .map((item, index) => {
                 const net = item.quantity * item.netPrice;
-                const vat = item.vatRate >= 0 ? (net * item.vatRate) / 100 : 0;
+                const vat = calculateVatAmount(item.vatRate, net);
                 const gross = net + vat;
-                const vatLabel = item.vatRate >= 0 ? item.vatRate + "%" : "zw.";
+                const vatLabel = getVatLabel(item.vatRate);
                 return `
                   <tr>
                     <td>${index + 1}</td>
@@ -2046,7 +2121,7 @@
         const ratePrevButton = document.querySelector("[data-action='rate-prev-day']");
         if (ratePrevButton) {
           ratePrevButton.addEventListener("click", () => {
-            state.exchangeRate.targetDate = getPreviousBusinessDay();
+            state.exchangeRate.targetDate = getPreviousBusinessDay(state.issueDate);
             state.exchangeRate.effectiveDate = "";
             state.exchangeRate.value = null;
             updateExchangeRateUI();
@@ -2061,7 +2136,7 @@
               return;
             }
             if (!state.exchangeRate.targetDate) {
-              state.exchangeRate.targetDate = getPreviousBusinessDay();
+              state.exchangeRate.targetDate = getPreviousBusinessDay(state.issueDate);
             }
             updateExchangeRateUI();
             ensureExchangeRate({ forceRefresh: true });

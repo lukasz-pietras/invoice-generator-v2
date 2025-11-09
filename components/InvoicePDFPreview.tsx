@@ -7,12 +7,37 @@ interface InvoicePDFPreviewProps {
   invoiceData: InvoiceData;
 }
 
+function isPercentageRate(rate: number): boolean {
+  return rate >= 0;
+}
+
+function calculateVatAmount(rate: number, netAmount: number): number {
+  return isPercentageRate(rate) ? (netAmount * rate) / 100 : 0;
+}
+
+function getVatLabel(rate: number): string {
+  if (isPercentageRate(rate)) {
+    return `${rate}%`;
+  }
+
+  switch (rate) {
+    case -1:
+      return 'ZW';
+    case -2:
+      return 'NP';
+    case -3:
+      return 'OO';
+    default:
+      return 'ZW';
+  }
+}
+
 function calculateInvoice(data: InvoiceData): InvoiceCalculations {
   const vatBreakdown: { [key: number]: { net: number; vat: number; gross: number } } = {};
 
   data.items.forEach(item => {
     const netAmount = item.quantity * item.netPrice;
-    const vatAmount = item.vatRate >= 0 ? (netAmount * item.vatRate) / 100 : 0;
+    const vatAmount = calculateVatAmount(item.vatRate, netAmount);
     const grossAmount = netAmount + vatAmount;
 
     if (!vatBreakdown[item.vatRate]) {
@@ -67,7 +92,7 @@ export function InvoicePDFPreview({ invoiceData }: InvoicePDFPreviewProps) {
   const plnItems = shouldShowPlnBreakdown
     ? invoiceData.items.map((item, index) => {
         const netAmount = item.quantity * item.netPrice;
-        const vatAmount = item.vatRate >= 0 ? (netAmount * item.vatRate) / 100 : 0;
+        const vatAmount = calculateVatAmount(item.vatRate, netAmount);
         const grossAmount = netAmount + vatAmount;
         return {
           index,
@@ -256,9 +281,9 @@ export function InvoicePDFPreview({ invoiceData }: InvoicePDFPreviewProps) {
               <tbody>
                 {invoiceData.items.map((item, index) => {
                   const netAmount = item.quantity * item.netPrice;
-                  const vatAmount = item.vatRate >= 0 ? (netAmount * item.vatRate) / 100 : 0;
+                  const vatAmount = calculateVatAmount(item.vatRate, netAmount);
                   const grossAmount = netAmount + vatAmount;
-                  const vatDisplay = item.vatRate >= 0 ? `${item.vatRate}%` : 'zw.';
+                  const vatDisplay = getVatLabel(item.vatRate);
 
                   return (
                     <tr key={item.id}>
@@ -266,16 +291,16 @@ export function InvoicePDFPreview({ invoiceData }: InvoicePDFPreviewProps) {
                       <td className="p-2 border border-gray-300">{item.name || '___________'}</td>
                       <td className="p-2 text-center border border-gray-300">{item.quantity}</td>
                       <td className="p-2 text-center border border-gray-300">{item.unit}</td>
-                      <td className="p-2 text-right border border-gray-300">
-                        {formatCurrency(item.netPrice, invoiceData.currency)}
-                      </td>
-                      <td className="p-2 text-right border border-gray-300">
-                        {formatCurrency(netAmount, invoiceData.currency)}
-                      </td>
-                      <td className="p-2 text-center border border-gray-300">{vatDisplay}</td>
-                      <td className="p-2 text-right border border-gray-300">
-                        {formatCurrency(vatAmount, invoiceData.currency)}
-                      </td>
+                    <td className="p-2 text-right border border-gray-300">
+                      {formatCurrency(item.netPrice, invoiceData.currency)}
+                    </td>
+                    <td className="p-2 text-right border border-gray-300">
+                      {formatCurrency(netAmount, invoiceData.currency)}
+                    </td>
+                    <td className="p-2 text-center border border-gray-300">{vatDisplay}</td>
+                    <td className="p-2 text-right border border-gray-300">
+                      {formatCurrency(vatAmount, invoiceData.currency)}
+                    </td>
                       <td className="p-2 text-right border border-gray-300">
                         {formatCurrency(grossAmount, invoiceData.currency)}
                       </td>
@@ -298,7 +323,7 @@ export function InvoicePDFPreview({ invoiceData }: InvoicePDFPreviewProps) {
                 </thead>
                 <tbody>
                   {calculations.vatBreakdown.map(item => {
-                    const vatDisplay = item.rate >= 0 ? `${item.rate}%` : 'zw.';
+                    const vatDisplay = getVatLabel(item.rate);
                     return (
                       <tr key={item.rate}>
                         <td className="p-2 border border-gray-300">{vatDisplay}</td>
@@ -371,7 +396,7 @@ export function InvoicePDFPreview({ invoiceData }: InvoicePDFPreviewProps) {
                   </thead>
                   <tbody>
                     {plnItems.map(item => {
-                      const vatDisplay = item.vatRate >= 0 ? `${item.vatRate}%` : 'zw.';
+                      const vatDisplay = getVatLabel(item.vatRate);
                       return (
                         <tr key={item.index}>
                           <td className="p-2 border border-gray-300">{item.index + 1}</td>
