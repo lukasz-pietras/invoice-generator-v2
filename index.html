@@ -1,0 +1,1403 @@
+<!DOCTYPE html>
+<html lang="pl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Generator faktur</title>
+    <style>
+      :root {
+        --gap: 20px;
+        --radius: 12px;
+        --border: #e5e7eb;
+        --panel: #ffffff;
+        --bg: #f5f6fa;
+        --primary: #2563eb;
+        --primary-soft: rgba(37, 99, 235, 0.12);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+        background: var(--bg);
+        color: #1f2937;
+      }
+
+      h1,
+      h2 {
+        margin: 0;
+      }
+
+      p {
+        margin: 0 0 8px;
+        color: #6b7280;
+      }
+
+      .app {
+        display: flex;
+        gap: var(--gap);
+        padding: var(--gap);
+        min-height: 100vh;
+      }
+
+      .panel {
+        background: var(--panel);
+        border-radius: var(--radius);
+        box-shadow: 0 20px 40px rgba(15, 23, 42, 0.08);
+        border: 1px solid rgba(15, 23, 42, 0.05);
+        display: flex;
+        flex-direction: column;
+      }
+
+      .panel.form {
+        width: 45%;
+        padding: var(--gap);
+        gap: var(--gap);
+        overflow-y: auto;
+        max-height: calc(100vh - 2 * var(--gap));
+      }
+
+      .panel.preview {
+        flex: 1;
+        padding: var(--gap);
+        overflow-y: auto;
+        max-height: calc(100vh - 2 * var(--gap));
+      }
+
+      .section {
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 18px;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+
+      .section h2 {
+        font-size: 1.05rem;
+      }
+
+      .grid {
+        display: grid;
+        gap: 12px;
+      }
+
+      .grid.two {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      label {
+        font-size: 0.9rem;
+        font-weight: 600;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      input,
+      select,
+      textarea {
+        font-family: inherit;
+        padding: 9px 11px;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        font-size: 0.95rem;
+        background: #f9fafb;
+        transition: border 0.2s, box-shadow 0.2s, background 0.2s;
+      }
+
+      input:focus,
+      select:focus,
+      textarea:focus {
+        outline: none;
+        border-color: var(--primary);
+        box-shadow: 0 0 0 4px var(--primary-soft);
+        background: #fff;
+      }
+
+      textarea {
+        resize: vertical;
+        min-height: 90px;
+      }
+
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 9px 16px;
+        border-radius: 10px;
+        border: none;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 0.9rem;
+        transition: transform 0.2s, box-shadow 0.2s;
+      }
+
+      .btn-primary {
+        background: var(--primary);
+        color: white;
+        box-shadow: 0 12px 24px rgba(37, 99, 235, 0.25);
+      }
+
+      .btn-secondary {
+        background: #eef2ff;
+        color: #1e3a8a;
+        border: 1px solid rgba(37, 99, 235, 0.2);
+      }
+
+      .btn-ghost {
+        background: transparent;
+        color: #ef4444;
+      }
+
+      .btn:hover {
+        transform: translateY(-1px);
+      }
+
+      .logo-box {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 80px;
+        border-radius: 10px;
+        background: #f9fafb;
+        border: 1px dashed var(--border);
+        padding: 10px;
+      }
+
+      .logo-box img {
+        max-height: 70px;
+        max-width: 100%;
+        object-fit: contain;
+      }
+
+      .saved-row {
+        display: flex;
+        gap: 8px;
+      }
+
+      .saved-row select {
+        flex: 1;
+      }
+
+      .saved-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .items {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+      }
+
+      .item-card {
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 16px;
+        background: #f8fafc;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .item-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .preview header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 16px;
+      }
+
+      .paper {
+        background: white;
+        border-radius: 16px;
+        border: 1px solid var(--border);
+        padding: 40px;
+        box-shadow: inset 0 0 0 1px rgba(148, 163, 184, 0.1);
+      }
+
+      .pair {
+        display: grid;
+        gap: 20px;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .info-box {
+        background: #f9fafb;
+        border: 1px solid rgba(148, 163, 184, 0.35);
+        border-radius: 12px;
+        padding: 16px;
+      }
+
+      .info-box h3 {
+        margin: 0 0 8px;
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        color: #6b7280;
+        letter-spacing: 0.04em;
+      }
+
+      .info-box p {
+        margin: 0;
+        color: #1f2937;
+        line-height: 1.5;
+        font-size: 0.95rem;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 26px;
+        font-size: 0.9rem;
+      }
+
+      th,
+      td {
+        border: 1px solid #dbe1ea;
+        padding: 10px;
+        text-align: left;
+      }
+
+      th {
+        background: #eef2ff;
+        font-weight: 600;
+      }
+
+      td.num {
+        text-align: right;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .summary {
+        margin-top: 24px;
+        display: grid;
+        gap: 10px;
+      }
+
+      .summary div {
+        display: flex;
+        justify-content: space-between;
+        font-size: 1rem;
+      }
+
+      .summary div strong {
+        font-weight: 700;
+      }
+
+      .notes {
+        margin-top: 24px;
+        border: 1px dashed var(--border);
+        border-radius: 12px;
+        padding: 16px;
+        min-height: 70px;
+        background: #f9fafb;
+        font-size: 0.95rem;
+      }
+
+      @media (max-width: 1200px) {
+        .app {
+          flex-direction: column;
+        }
+
+        .panel.form,
+        .panel.preview {
+          width: 100%;
+          max-height: none;
+        }
+      }
+
+      @media print {
+        body {
+          background: white;
+        }
+        .app,
+        .panel.form,
+        .panel.preview {
+          display: block;
+        }
+        .panel.form {
+          display: none;
+        }
+        .panel.preview {
+          padding: 0;
+          box-shadow: none;
+        }
+        .paper {
+          box-shadow: none;
+          border: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app">
+      <section class="panel form" id="form-panel">
+        <header>
+          <h1>Generator faktur</h1>
+          <p>
+            Wypelnij dane sprzedawcy, nabywcy i pozycje, aby uzyskac gotowa
+            fakture.
+          </p>
+        </header>
+
+        <div class="section" aria-labelledby="invoice-info">
+          <h2 id="invoice-info">Dane faktury</h2>
+          <div class="grid two">
+            <label>
+              Numer faktury
+              <input type="text" data-field="invoiceNumber" placeholder="FV/01/2025" />
+            </label>
+            <label>
+              Waluta
+              <select data-field="currency">
+                <option value="PLN">PLN</option>
+                <option value="EUR">EUR</option>
+                <option value="USD">USD</option>
+                <option value="GBP">GBP</option>
+              </select>
+            </label>
+            <label>
+              Data wystawienia
+              <input type="date" data-field="issueDate" />
+            </label>
+            <label>
+              Data sprzedazy
+              <input type="date" data-field="saleDate" />
+            </label>
+            <label>
+              Termin platnosci
+              <input type="date" data-field="paymentDeadline" />
+            </label>
+            <label>
+              Metoda platnosci
+              <select data-field="paymentMethod">
+                <option value="Przelew">Przelew</option>
+                <option value="Gotowka">Gotowka</option>
+                <option value="Karta">Karta</option>
+              </select>
+            </label>
+          </div>
+        </div>
+
+        <div class="section" aria-labelledby="logo">
+          <div class="saved-row" style="justify-content: space-between">
+            <h2 id="logo" style="margin:0;">Logo</h2>
+            <button class="btn btn-secondary" id="logo-btn" type="button">
+              Dodaj / zmien
+            </button>
+          </div>
+          <input type="file" id="logo-input" accept="image/*" hidden />
+          <div class="logo-box" id="logo-preview">Brak logo</div>
+        </div>
+
+        <div class="section" aria-labelledby="seller">
+          <h2 id="seller">Sprzedawca</h2>
+          <div class="saved-row">
+            <select id="seller-select">
+              <option value="">Wybierz zapisane dane</option>
+            </select>
+            <button class="btn btn-secondary" type="button" data-action="load-seller">
+              Wczytaj
+            </button>
+          </div>
+          <div class="saved-actions">
+            <button class="btn btn-secondary" type="button" id="export-btn">
+              Eksportuj
+            </button>
+            <button class="btn btn-secondary" type="button" data-action="save-seller">
+              Zapisz
+            </button>
+          </div>
+          <div class="grid">
+            <label>
+              Nazwa
+              <input type="text" data-field="seller.name" placeholder="Nazwa firmy" />
+            </label>
+            <label>
+              Adres
+              <input type="text" data-field="seller.address" placeholder="Ulica i numer" />
+            </label>
+            <div class="grid two">
+              <label>
+                Kod pocztowy
+                <input type="text" data-field="seller.postalCode" placeholder="00-000" />
+              </label>
+              <label>
+                Miasto
+                <input type="text" data-field="seller.city" placeholder="Miasto" />
+              </label>
+            </div>
+            <label>
+              NIP
+              <input type="text" data-field="seller.nip" placeholder="0000000000" />
+            </label>
+            <label>
+              Numer konta
+              <input type="text" data-field="seller.bankAccount" placeholder="00 0000 0000 0000 0000 0000 0000" />
+            </label>
+          </div>
+        </div>
+
+        <div class="section" aria-labelledby="buyer">
+          <h2 id="buyer">Nabywca</h2>
+          <div class="saved-row">
+            <select id="buyer-select">
+              <option value="">Wybierz zapisane dane</option>
+            </select>
+            <button class="btn btn-secondary" type="button" data-action="load-buyer">
+              Wczytaj
+            </button>
+          </div>
+          <div class="saved-actions">
+            <button class="btn btn-secondary" type="button" data-action="save-buyer">
+              Zapisz
+            </button>
+          </div>
+          <div class="grid">
+            <label>
+              Nazwa
+              <input type="text" data-field="buyer.name" placeholder="Nazwa firmy" />
+            </label>
+            <label>
+              Adres
+              <input type="text" data-field="buyer.address" placeholder="Ulica i numer" />
+            </label>
+            <div class="grid two">
+              <label>
+                Kod pocztowy
+                <input type="text" data-field="buyer.postalCode" placeholder="00-000" />
+              </label>
+              <label>
+                Miasto
+                <input type="text" data-field="buyer.city" placeholder="Miasto" />
+              </label>
+            </div>
+            <label>
+              NIP
+              <input type="text" data-field="buyer.nip" placeholder="0000000000" />
+            </label>
+          </div>
+        </div>
+
+        <div class="section" aria-labelledby="items">
+          <div class="item-head">
+            <h2 id="items">Pozycje</h2>
+            <button class="btn btn-primary" type="button" id="add-item">
+              Dodaj pozycje
+            </button>
+          </div>
+          <div class="items" id="items-container"></div>
+        </div>
+
+        <div class="section" aria-labelledby="notes">
+          <h2 id="notes">Uwagi</h2>
+          <textarea data-field="notes" placeholder="Dodatkowe informacje dla nabywcy"></textarea>
+        </div>
+      </section>
+
+      <section class="panel preview">
+        <header>
+          <h1>Podglad faktury</h1>
+          <button class="btn btn-primary" type="button" id="download-btn">
+            Pobierz / wydrukuj
+          </button>
+        </header>
+        <div class="paper" id="preview">
+          <!-- dynamic preview -->
+        </div>
+      </section>
+    </div>
+    <template id="item-template">
+      <div class="item-card" data-card>
+        <div class="item-head">
+          <strong>Pozycja <span data-index></span></strong>
+          <button class="btn btn-ghost" type="button" data-remove>Usun</button>
+        </div>
+        <div class="grid">
+          <label>
+            Nazwa
+            <input type="text" data-item="name" placeholder="Produkt / usluga" />
+          </label>
+          <div class="grid two">
+            <label>
+              Ilosc
+              <input type="number" min="0" step="0.01" data-item="quantity" />
+            </label>
+            <label>
+              Jednostka
+              <input type="text" data-item="unit" list="unit-list" />
+            </label>
+          </div>
+          <div class="grid two">
+            <label>
+              Cena netto
+              <input type="number" min="0" step="0.01" data-item="netPrice" />
+            </label>
+            <label>
+              VAT
+              <select data-item="vatRate">
+                <option value="23">23%</option>
+                <option value="8">8%</option>
+                <option value="5">5%</option>
+                <option value="0">0%</option>
+                <option value="-1">zw.</option>
+              </select>
+            </label>
+          </div>
+        </div>
+      </div>
+    </template>
+
+    <datalist id="unit-list">
+      <option value="szt."></option>
+      <option value="kg"></option>
+      <option value="m"></option>
+      <option value="m2"></option>
+      <option value="godz."></option>
+      <option value="usl."></option>
+    </datalist>
+
+    <script>
+      const defaultState = {
+        invoiceNumber: "",
+        issueDate: new Date().toISOString().split("T")[0],
+        saleDate: new Date().toISOString().split("T")[0],
+        paymentDeadline: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000)
+          .toISOString()
+          .split("T")[0],
+        paymentMethod: "Przelew",
+        currency: "PLN",
+        seller: {
+          name: "",
+          address: "",
+          postalCode: "",
+          city: "",
+          nip: "",
+          bankAccount: "",
+        },
+        buyer: {
+          name: "",
+          address: "",
+          postalCode: "",
+          city: "",
+          nip: "",
+        },
+        items: [
+          {
+            id: "1",
+            name: "",
+            quantity: 1,
+            unit: "szt.",
+            netPrice: 0,
+            vatRate: 23,
+          },
+        ],
+        notes: "",
+        logo: null,
+      };
+
+      let state = clone(defaultState);
+      const STORAGE_KEY = "invoiceCompanies";
+      const storageSnapshot = loadStoredData();
+      const storedData = storageSnapshot.data;
+      if (storageSnapshot.migrated) {
+        persistStorage();
+      }
+
+      const itemTemplate = document.getElementById("item-template");
+      const itemsContainer = document.getElementById("items-container");
+      const preview = document.getElementById("preview");
+      const logoPreview = document.getElementById("logo-preview");
+
+      function clone(data) {
+        return JSON.parse(JSON.stringify(data));
+      }
+
+      function loadStoredData() {
+        try {
+          const raw = localStorage.getItem(STORAGE_KEY);
+          if (raw) {
+            const parsed = JSON.parse(raw);
+            return {
+              data: {
+                seller: normalizeRecord(parsed.seller),
+                buyer: normalizeRecord(parsed.buyer),
+              },
+              migrated: false,
+            };
+          }
+        } catch (error) {
+          console.warn("Nie udalo sie odczytac", error);
+        }
+
+        const legacySeller = readLegacy("savedSellers");
+        const legacyBuyer = readLegacy("savedBuyers");
+        const migrated =
+          Object.keys(legacySeller).length > 0 || Object.keys(legacyBuyer).length > 0;
+
+        return {
+          data: {
+            seller: legacySeller,
+            buyer: legacyBuyer,
+          },
+          migrated,
+        };
+      }
+
+      function persistStorage() {
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(storedData));
+          localStorage.removeItem("savedSellers");
+          localStorage.removeItem("savedBuyers");
+        } catch (error) {
+          console.warn("Nie udalo sie zapisac", error);
+        }
+      }
+
+      function readLegacy(key) {
+        try {
+          const raw = localStorage.getItem(key);
+          if (!raw) return {};
+          const parsed = JSON.parse(raw);
+          return normalizeRecord(parsed);
+        } catch (error) {
+          console.warn("Nie udalo sie odczytac z legacy", error);
+          return {};
+        }
+      }
+
+      function normalizeRecord(input) {
+        if (!input) return {};
+        if (Array.isArray(input)) {
+          const map = {};
+          input.forEach((entry) => {
+            if (!entry) return;
+            if (entry.name) {
+              const payload = entry.data ? { ...entry.data } : { ...entry };
+              payload.name = payload.name || entry.name;
+              map[entry.name] = payload;
+            }
+          });
+          return map;
+        }
+        if (typeof input === "object") {
+          const map = {};
+          Object.entries(input).forEach(([key, value]) => {
+            if (!value) return;
+            const payload = value.data ? { ...value.data } : { ...value };
+            payload.name = payload.name || key;
+            map[key] = payload;
+          });
+          return map;
+        }
+        return {};
+      }
+
+      function setNested(path, value) {
+        const keys = path.split(".");
+        let target = state;
+        keys.forEach((key, index) => {
+          if (index === keys.length - 1) {
+            target[key] = value;
+          } else {
+            target = target[key];
+          }
+        });
+        renderPreview();
+      }
+
+      function handleFieldChange(event) {
+        const path = event.target.dataset.field;
+        if (!path) return;
+        const { type, value } = event.target;
+        setNested(path, type === "number" ? parseFloat(value) || 0 : value);
+      }
+
+      function addItem() {
+        const ids = state.items.map((item) => Number(item.id));
+        const next = ids.length ? Math.max(...ids) + 1 : 1;
+        state.items.push({
+          id: String(next),
+          name: "",
+          quantity: 1,
+          unit: "szt.",
+          netPrice: 0,
+          vatRate: 23,
+        });
+        renderItems();
+        renderPreview();
+      }
+
+      function updateItem(id, field, value) {
+        const item = state.items.find((entry) => entry.id === id);
+        if (!item) return;
+        if (["quantity", "netPrice", "vatRate"].includes(field)) {
+          item[field] = parseFloat(value) || 0;
+        } else {
+          item[field] = value;
+        }
+        renderPreview();
+      }
+
+      function removeItem(id) {
+        if (state.items.length === 1) {
+          alert("Faktura musi miec przynajmniej jedna pozycje.");
+          return;
+        }
+        state.items = state.items.filter((item) => item.id !== id);
+        renderItems();
+        renderPreview();
+      }
+
+      function renderItems() {
+        itemsContainer.innerHTML = "";
+        state.items.forEach((item, index) => {
+          const fragment = itemTemplate.content.cloneNode(true);
+          const card = fragment.querySelector("[data-card]");
+          card.dataset.id = item.id;
+          fragment.querySelector("[data-index]").textContent = index + 1;
+          fragment.querySelector("[data-item='name']").value = item.name || "";
+          fragment.querySelector("[data-item='quantity']").value =
+            item.quantity;
+          fragment.querySelector("[data-item='unit']").value = item.unit || "";
+          fragment.querySelector("[data-item='netPrice']").value =
+            item.netPrice;
+          fragment.querySelector("[data-item='vatRate']").value = item.vatRate;
+
+          fragment.querySelectorAll("[data-item]").forEach((input) => {
+            input.addEventListener("input", (event) =>
+              updateItem(
+                item.id,
+                event.target.dataset.item,
+                event.target.value
+              )
+            );
+          });
+          fragment
+            .querySelector("[data-remove]")
+            .addEventListener("click", () => removeItem(item.id));
+          itemsContainer.appendChild(fragment);
+        });
+      }
+
+      function formatCurrency(amount) {
+        const symbols = { PLN: "zl", EUR: "EUR", USD: "USD", GBP: "GBP" };
+        return `${amount.toFixed(2)} ${symbols[state.currency] || state.currency}`;
+      }
+
+      function formatDate(value) {
+        if (!value) return "";
+        try {
+          return new Date(value).toLocaleDateString("pl-PL");
+        } catch (error) {
+          return value;
+        }
+      }
+
+      function calculateTotals() {
+        const summary = {};
+        state.items.forEach((item) => {
+          const net = item.quantity * item.netPrice;
+          const vat = item.vatRate >= 0 ? (net * item.vatRate) / 100 : 0;
+          const gross = net + vat;
+          summary[item.vatRate] ??= { net: 0, vat: 0, gross: 0 };
+          summary[item.vatRate].net += net;
+          summary[item.vatRate].vat += vat;
+          summary[item.vatRate].gross += gross;
+        });
+        const netTotal = Object.values(summary).reduce(
+          (sum, row) => sum + row.net,
+          0
+        );
+        const vatTotal = Object.values(summary).reduce(
+          (sum, row) => sum + row.vat,
+          0
+        );
+        return {
+          netTotal,
+          vatTotal,
+          grossTotal: netTotal + vatTotal,
+          rows: Object.entries(summary).map(([rate, values]) => ({
+            rate: Number(rate),
+            ...values,
+          })),
+        };
+      }
+
+      function renderPreview() {
+        const totals = calculateTotals();
+        preview.innerHTML = `
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;">
+            <div>
+              <h2 style="font-size:1.4rem;margin:0 0 6px;">Faktura VAT</h2>
+              <p style="margin:0;color:${state.invoiceNumber ? "#1f2937" : "#9ca3af"};">
+                ${state.invoiceNumber || "Numer faktury"}
+              </p>
+            </div>
+            ${
+              state.logo
+                ? `<img src="${state.logo}" alt="Logo" style="max-height:70px;max-width:160px;object-fit:contain;" />`
+                : ""
+            }
+          </div>
+          <div class="pair">
+            <div class="info-box">
+              <h3>Sprzedawca</h3>
+              <p>
+                ${state.seller.name || "Nazwa"}<br/>
+                ${state.seller.address || "Adres"}<br/>
+                ${(state.seller.postalCode || "00-000") + " " + (state.seller.city || "Miasto")}<br/>
+                NIP: ${state.seller.nip || "0000000000"}<br/>
+                ${state.seller.bankAccount ? "Konto: " + state.seller.bankAccount : ""}
+              </p>
+            </div>
+            <div class="info-box">
+              <h3>Nabywca</h3>
+              <p>
+                ${state.buyer.name || "Nazwa"}<br/>
+                ${state.buyer.address || "Adres"}<br/>
+                ${(state.buyer.postalCode || "00-000") + " " + (state.buyer.city || "Miasto")}<br/>
+                NIP: ${state.buyer.nip || "0000000000"}
+              </p>
+            </div>
+          </div>
+          <div class="pair" style="margin-top:20px;">
+            <div class="info-box">
+              <h3>Data wystawienia</h3>
+              <p>${formatDate(state.issueDate)}</p>
+            </div>
+            <div class="info-box">
+              <h3>Data sprzedazy</h3>
+              <p>${formatDate(state.saleDate)}</p>
+            </div>
+            <div class="info-box">
+              <h3>Termin platnosci</h3>
+              <p>${formatDate(state.paymentDeadline)}</p>
+            </div>
+            <div class="info-box">
+              <h3>Metoda platnosci</h3>
+              <p>${state.paymentMethod}</p>
+            </div>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th style="width:40px;">Lp.</th>
+                <th>Nazwa</th>
+                <th style="width:80px;">Ilosc</th>
+                <th style="width:80px;">Jedn.</th>
+                <th style="width:120px;">Cena netto</th>
+                <th style="width:150px;">Wartosc netto</th>
+                <th style="width:90px;">VAT</th>
+                <th style="width:150px;">Kwota VAT</th>
+                <th style="width:150px;">Wartosc brutto</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${
+                state.items.length
+                  ? state.items
+                      .map((item, index) => {
+                        const net = item.quantity * item.netPrice;
+                        const vat =
+                          item.vatRate >= 0 ? (net * item.vatRate) / 100 : 0;
+                        const gross = net + vat;
+                        return `
+                          <tr>
+                            <td class="num">${index + 1}</td>
+                            <td>${item.name || "-"}</td>
+                            <td class="num">${item.quantity.toFixed(2)}</td>
+                            <td>${item.unit || ""}</td>
+                            <td class="num">${formatCurrency(item.netPrice)}</td>
+                            <td class="num">${formatCurrency(net)}</td>
+                            <td class="num">${item.vatRate >= 0 ? item.vatRate + "%" : "zw."}</td>
+                            <td class="num">${formatCurrency(vat)}</td>
+                            <td class="num">${formatCurrency(gross)}</td>
+                          </tr>
+                        `;
+                      })
+                      .join("")
+                  : `<tr><td colspan="9" style="text-align:center;padding:24px;">Brak pozycji</td></tr>`
+              }
+            </tbody>
+          </table>
+          <div class="summary">
+            <div>
+              <span>Suma netto</span>
+              <strong>${formatCurrency(totals.netTotal)}</strong>
+            </div>
+            <div>
+              <span>Suma VAT</span>
+              <strong>${formatCurrency(totals.vatTotal)}</strong>
+            </div>
+            <div style="font-size:1.1rem;">
+              <span>Suma brutto</span>
+              <strong>${formatCurrency(totals.grossTotal)}</strong>
+            </div>
+          </div>
+          <div class="summary" style="margin-top:18px;">
+            <div style="font-weight:600;">Zestawienie VAT</div>
+            <table>
+              <thead>
+                <tr>
+                  <th>Stawka</th>
+                  <th>Netto</th>
+                  <th>VAT</th>
+                  <th>Brutto</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${
+                  totals.rows.length
+                    ? totals.rows
+                        .map(
+                          (row) => `
+                            <tr>
+                              <td>${row.rate >= 0 ? row.rate + "%" : "zw."}</td>
+                              <td class="num">${formatCurrency(row.net)}</td>
+                              <td class="num">${formatCurrency(row.vat)}</td>
+                              <td class="num">${formatCurrency(row.gross)}</td>
+                            </tr>
+                          `
+                        )
+                        .join("")
+                    : `<tr><td colspan="4" style="text-align:center;padding:12px;">Brak danych</td></tr>`
+                }
+              </tbody>
+            </table>
+          </div>
+          <div class="notes">
+            <strong>Uwagi:</strong><br/>
+            ${state.notes ? state.notes.replace(/\n/g, "<br/>") : "Brak"}
+          </div>
+        `;
+      }
+
+      function populateCompanySelect(type) {
+        const select = document.getElementById(`${type}-select`);
+        const current = select.value;
+        const entries = Object.keys(storedData[type] || {});
+        select.innerHTML = '<option value="">Wybierz zapisane dane</option>';
+        entries.forEach((name) => {
+          const option = document.createElement("option");
+          option.value = name;
+          option.textContent = name;
+          select.appendChild(option);
+        });
+        if (current && entries.includes(current)) {
+          select.value = current;
+        }
+      }
+
+      function saveCompany(type) {
+        const data = clone(state[type]);
+        if (!data.name) {
+          alert("Podaj nazwe firmy, aby zapisac dane.");
+          return;
+        }
+        storedData[type][data.name] = data;
+        persistStorage();
+        populateCompanySelect(type);
+        document.getElementById(`${type}-select`).value = data.name;
+        alert("Dane zapisane.");
+      }
+
+      function loadCompany(type) {
+        const input = document.createElement("input");
+        input.type = "file";
+        input.accept = "application/json";
+        input.addEventListener("change", (event) => {
+          const file = event.target.files?.[0];
+          if (!file) return;
+
+          const reader = new FileReader();
+          reader.onload = () => {
+            try {
+              const data = JSON.parse(reader.result);
+              if (!data || typeof data !== "object") {
+                throw new Error("Nieprawidlowy format JSON.");
+              }
+
+              const mapped = mapImportedCompany(type, data);
+              if (!mapped.name) {
+                throw new Error("Brak pola 'name'.");
+              }
+
+              storedData[type][mapped.name] = mapped;
+              persistStorage();
+              populateCompanySelect(type);
+
+              state[type] = clone(mapped);
+              document.getElementById(`${type}-select`).value = mapped.name;
+              syncForm();
+              renderPreview();
+
+              alert("Dane wczytane pomyslnie.");
+            } catch (error) {
+              console.error(error);
+              alert("Nieprawidlowy plik JSON.");
+            }
+          };
+          reader.readAsText(file);
+        });
+        input.click();
+      }
+
+      function mapImportedCompany(type, data) {
+        if (data && data.name && data.address) {
+          const result = {
+            name: data.name,
+            address: data.address,
+            postalCode: data.postalCode || "",
+            city: data.city || "",
+            nip: data.nip || "",
+            bankAccount: type === "seller" ? data.account || data.bankAccount || "" : undefined,
+          };
+
+          if (!result.postalCode && !result.city && typeof data.address === "string") {
+            const segments = data.address.split(" ");
+            if (segments.length >= 2) {
+              result.postalCode = segments.slice(-2, -1)[0];
+              result.city = segments.slice(-1)[0];
+            }
+          }
+
+          return result;
+        }
+        return {
+          name: data.name || "",
+          address: data.address || "",
+          postalCode: data.postalCode || "",
+          city: data.city || "",
+          nip: data.nip || "",
+          bankAccount: type === "seller" ? data.account || data.bankAccount || "" : undefined,
+        };
+      }
+
+      function exportData() {
+        const payload = { seller: {}, buyer: {} };
+
+        Object.entries(storedData.seller).forEach(([name, record]) => {
+          if (!record) return;
+          const entry = {
+            name: record.name || name,
+            nip: record.nip || "",
+            address: buildExportAddress(record),
+          };
+          if (record.bankAccount) {
+            entry.account = record.bankAccount;
+          }
+          payload.seller[name] = entry;
+        });
+
+        Object.entries(storedData.buyer).forEach(([name, record]) => {
+          if (!record) return;
+          payload.buyer[name] = {
+            name: record.name || name,
+            nip: record.nip || "",
+            address: buildExportAddress(record),
+          };
+        });
+
+        const blob = new Blob([JSON.stringify(payload, null, 2)], {
+          type: "application/json",
+        });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = "eksport.json";
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+      }
+
+      function buildExportAddress(record) {
+        if (!record) return "";
+        const parts = [];
+        if (record.address) {
+          parts.push(String(record.address).trim());
+        }
+        const location = [record.postalCode, record.city]
+          .filter(Boolean)
+          .map((value) => String(value).trim())
+          .filter(Boolean)
+          .join(" ");
+        if (location) {
+          parts.push(location);
+        }
+        return parts.join(" ").replace(/\s+/g, " ").trim();
+      }
+
+      function syncForm() {
+        document.querySelectorAll("[data-field]").forEach((input) => {
+          const path = input.dataset.field;
+          const keys = path.split(".");
+          let value = state;
+          keys.forEach((key) => (value = value[key]));
+          if (input.type === "date") {
+            input.value = value ? value : "";
+          } else {
+            input.value = value ?? "";
+          }
+        });
+        renderItems();
+        renderLogo();
+      }
+
+      function renderLogo() {
+        if (state.logo) {
+          logoPreview.innerHTML = `<img src="${state.logo}" alt="Logo firmy" />`;
+        } else {
+          logoPreview.textContent = "Brak logo";
+        }
+      }
+
+      function handleLogo(file) {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          state.logo = reader.result;
+          renderLogo();
+          renderPreview();
+        };
+        reader.readAsDataURL(file);
+      }
+
+      function downloadInvoice() {
+        const totals = calculateTotals();
+        const printWin = window.open("", "_blank");
+        if (!printWin) return;
+        const stylesheet = `
+          body{font-family:'Inter',system-ui,sans-serif;padding:40px;color:#1f2937;}
+          h1,h2,h3{margin:0;}
+          table{width:100%;border-collapse:collapse;margin-top:24px;}
+          th,td{border:1px solid #d1d5db;padding:10px;font-size:0.9rem;text-align:left;}
+          th{background:#eef2ff;}
+          td.num{text-align:right;font-variant-numeric:tabular-nums;}
+          .pair{display:flex;gap:20px;margin-top:20px;}
+          .box{flex:1;background:#f3f4f6;padding:16px;border-radius:10px;}
+          .box h3{margin:0 0 8px;font-size:0.9rem;text-transform:uppercase;color:#6b7280;}
+          .summary{margin-top:24px;}
+          .summary div{display:flex;justify-content:space-between;margin-top:6px;}
+          .notes{margin-top:24px;border:1px dashed #d1d5db;padding:16px;border-radius:12px;}
+          img.logo{max-height:70px;max-width:160px;object-fit:contain;}
+        `;
+
+        const itemRows = state.items
+          .map((item, index) => {
+            const net = item.quantity * item.netPrice;
+            const vat = item.vatRate >= 0 ? (net * item.vatRate) / 100 : 0;
+            const gross = net + vat;
+            return `
+              <tr>
+                <td>${index + 1}</td>
+                <td>${item.name || "-"}</td>
+                <td class="num">${item.quantity.toFixed(2)}</td>
+                <td>${item.unit || ""}</td>
+                <td class="num">${formatCurrency(item.netPrice)}</td>
+                <td class="num">${formatCurrency(net)}</td>
+                <td class="num">${item.vatRate >= 0 ? item.vatRate + "%" : "zw."}</td>
+                <td class="num">${formatCurrency(vat)}</td>
+                <td class="num">${formatCurrency(gross)}</td>
+              </tr>
+            `;
+          })
+          .join("");
+
+        const vatRows = totals.rows
+          .map(
+            (row) => `
+              <tr>
+                <td>${row.rate >= 0 ? row.rate + "%" : "zw."}</td>
+                <td class="num">${formatCurrency(row.net)}</td>
+                <td class="num">${formatCurrency(row.vat)}</td>
+                <td class="num">${formatCurrency(row.gross)}</td>
+              </tr>
+            `
+          )
+          .join("");
+
+        printWin.document.write(`
+          <!DOCTYPE html>
+          <html lang="pl">
+            <head>
+              <meta charset="UTF-8" />
+              <title>Faktura ${state.invoiceNumber || ""}</title>
+              <style>${stylesheet}</style>
+            </head>
+            <body>
+              <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+                <div>
+                  <h1>Faktura VAT</h1>
+                  <p>${state.invoiceNumber || ""}</p>
+                </div>
+                ${
+                  state.logo
+                    ? `<img src="${state.logo}" class="logo" alt="Logo" />`
+                    : ""
+                }
+              </div>
+              <div class="pair">
+                <div class="box">
+                  <h3>Sprzedawca</h3>
+                  <p>
+                    ${state.seller.name || "Nazwa"}<br/>
+                    ${state.seller.address || "Adres"}<br/>
+                    ${(state.seller.postalCode || "00-000") + " " + (state.seller.city || "Miasto")}<br/>
+                    NIP: ${state.seller.nip || "0000000000"}<br/>
+                    ${state.seller.bankAccount ? "Konto: " + state.seller.bankAccount : ""}
+                  </p>
+                </div>
+                <div class="box">
+                  <h3>Nabywca</h3>
+                  <p>
+                    ${state.buyer.name || "Nazwa"}<br/>
+                    ${state.buyer.address || "Adres"}<br/>
+                    ${(state.buyer.postalCode || "00-000") + " " + (state.buyer.city || "Miasto")}<br/>
+                    NIP: ${state.buyer.nip || "0000000000"}
+                  </p>
+                </div>
+              </div>
+              <div class="pair">
+                <div class="box">
+                  <h3>Data wystawienia</h3>
+                  <p>${formatDate(state.issueDate)}</p>
+                </div>
+                <div class="box">
+                  <h3>Data sprzedazy</h3>
+                  <p>${formatDate(state.saleDate)}</p>
+                </div>
+                <div class="box">
+                  <h3>Termin platnosci</h3>
+                  <p>${formatDate(state.paymentDeadline)}</p>
+                </div>
+                <div class="box">
+                  <h3>Metoda platnosci</h3>
+                  <p>${state.paymentMethod}</p>
+                </div>
+              </div>
+              <table>
+                <thead>
+                  <tr>
+                    <th>Lp.</th>
+                    <th>Nazwa</th>
+                    <th>Ilosc</th>
+                    <th>Jedn.</th>
+                    <th>Cena netto</th>
+                    <th>Wartosc netto</th>
+                    <th>VAT</th>
+                    <th>Kwota VAT</th>
+                    <th>Wartosc brutto</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${itemRows}
+                </tbody>
+              </table>
+              <div class="summary">
+                <div><span>Suma netto</span><strong>${formatCurrency(
+                  totals.netTotal
+                )}</strong></div>
+                <div><span>Suma VAT</span><strong>${formatCurrency(
+                  totals.vatTotal
+                )}</strong></div>
+                <div><span>Suma brutto</span><strong>${formatCurrency(
+                  totals.grossTotal
+                )}</strong></div>
+              </div>
+              <h2 style="margin-top:24px;">Zestawienie VAT</h2>
+              <table>
+                <thead>
+                  <tr>
+                    <th>Stawka</th>
+                    <th>Netto</th>
+                    <th>VAT</th>
+                    <th>Brutto</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${
+                    vatRows ||
+                    `<tr><td colspan="4" style="text-align:center;padding:12px;">Brak danych</td></tr>`
+                  }
+                </tbody>
+              </table>
+              <div class="notes">
+                <strong>Uwagi:</strong><br/>
+                ${state.notes ? state.notes.replace(/\n/g, "<br/>") : "Brak"}
+              </div>
+            </body>
+          </html>
+        `);
+        printWin.document.close();
+        printWin.focus();
+      }
+
+      function attachEvents() {
+        document
+          .querySelectorAll("[data-field]")
+          .forEach((input) => {
+            input.addEventListener("input", handleFieldChange);
+            input.addEventListener("change", handleFieldChange);
+          });
+        document
+          .getElementById("add-item")
+          .addEventListener("click", addItem);
+        document
+          .getElementById("logo-btn")
+          .addEventListener("click", () =>
+            document.getElementById("logo-input").click()
+          );
+        document
+          .getElementById("logo-input")
+          .addEventListener("change", (event) => {
+            const file = event.target.files?.[0];
+            if (file) handleLogo(file);
+          });
+
+        document
+          .getElementById("export-btn")
+          .addEventListener("click", exportData);
+
+        document
+          .querySelector("[data-action='save-seller']")
+          .addEventListener("click", () => saveCompany("seller"));
+        document
+          .querySelector("[data-action='load-seller']")
+          .addEventListener("click", () => loadCompany("seller"));
+
+        document
+          .querySelector("[data-action='save-buyer']")
+          .addEventListener("click", () => saveCompany("buyer"));
+        document
+          .querySelector("[data-action='load-buyer']")
+          .addEventListener("click", () => loadCompany("buyer"));
+
+        document
+          .getElementById("download-btn")
+          .addEventListener("click", downloadInvoice);
+      }
+
+      function init() {
+        populateCompanySelect("seller");
+        populateCompanySelect("buyer");
+        syncForm();
+        renderPreview();
+        attachEvents();
+      }
+
+      init();
+    </script>
+  </body>
+</html>
