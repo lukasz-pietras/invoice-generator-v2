@@ -290,18 +290,18 @@ export function InvoicePDFPreview({ invoiceData }: InvoicePDFPreviewProps) {
             </div>
 
             {/* Items Table */}
-            <table className="w-full mb-5 text-xs">
+            <table className="w-full mb-4 text-[8px]">
               <thead>
                 <tr className="bg-gray-100">
-                  <th className="px-2 py-1.5 text-left border border-gray-300">Lp.</th>
-                  <th className="px-2 py-1.5 text-left border border-gray-300">Nazwa</th>
-                  <th className="px-2 py-1.5 text-center border border-gray-300">Ilość</th>
-                  <th className="px-2 py-1.5 text-center border border-gray-300">Jedn.</th>
-                  <th className="px-2 py-1.5 text-right border border-gray-300">Cena netto</th>
-                  <th className="px-2 py-1.5 text-right border border-gray-300">Wartość netto</th>
-                  <th className="px-2 py-1.5 text-center border border-gray-300">VAT</th>
-                  <th className="px-2 py-1.5 text-right border border-gray-300">Kwota VAT</th>
-                  <th className="px-2 py-1.5 text-right border border-gray-300">Wartość brutto</th>
+                  <th className="px-2 py-1.5 text-left border border-gray-300" style={{ width: '5%' }}>Lp.</th>
+                  <th className="px-2 py-1.5 text-left border border-gray-300" style={{ width: '34%' }}>Nazwa</th>
+                  <th className="px-2 py-1.5 text-center border border-gray-300" style={{ width: '7%' }}>Ilość</th>
+                  <th className="px-2 py-1.5 text-center border border-gray-300" style={{ width: '5%' }}>Jedn.</th>
+                  <th className="px-2 py-1.5 text-right border border-gray-300" style={{ width: '12%' }}>Cena netto</th>
+                  <th className="px-2 py-1.5 text-right border border-gray-300" style={{ width: '12%' }}>Wartość netto</th>
+                  <th className="px-2 py-1.5 text-center border border-gray-300" style={{ width: '5%' }}>VAT</th>
+                  <th className="px-2 py-1.5 text-right border border-gray-300" style={{ width: '10%' }}>Kwota VAT</th>
+                  <th className="px-2 py-1.5 text-right border border-gray-300" style={{ width: '10%' }}>Wartość brutto</th>
                 </tr>
               </thead>
               <tbody>
@@ -313,21 +313,21 @@ export function InvoicePDFPreview({ invoiceData }: InvoicePDFPreviewProps) {
 
                   return (
                     <tr key={item.id}>
-                      <td className="px-2 py-1.5 border border-gray-300">{index + 1}</td>
-                      <td className="px-2 py-1.5 border border-gray-300">{item.name || '___________'}</td>
-                      <td className="px-2 py-1.5 text-center border border-gray-300">{item.quantity}</td>
-                      <td className="px-2 py-1.5 text-center border border-gray-300">{item.unit}</td>
-                    <td className="px-2 py-1.5 text-right border border-gray-300">
-                      {formatCurrency(item.netPrice, invoiceData.currency)}
-                    </td>
-                    <td className="px-2 py-1.5 text-right border border-gray-300">
-                      {formatCurrency(netAmount, invoiceData.currency)}
-                    </td>
-                    <td className="px-2 py-1.5 text-center border border-gray-300">{vatDisplay}</td>
-                    <td className="px-2 py-1.5 text-right border border-gray-300">
-                      {formatCurrency(vatAmount, invoiceData.currency)}
-                    </td>
-                      <td className="px-2 py-1.5 text-right border border-gray-300">
+                      <td className="px-2 py-1.5 border border-gray-300" style={{ width: '5%' }}>{index + 1}</td>
+                      <td className="px-2 py-1.5 border border-gray-300 whitespace-normal break-words" style={{ width: '34%' }}>{item.name || '___________'}</td>
+                      <td className="px-2 py-1.5 text-center border border-gray-300" style={{ width: '7%' }}>{item.quantity}</td>
+                      <td className="px-2 py-1.5 text-center border border-gray-300" style={{ width: '5%' }}>{item.unit}</td>
+                      <td className="px-2 py-1.5 text-right border border-gray-300" style={{ width: '12%' }}>
+                        {formatCurrency(item.netPrice, invoiceData.currency)}
+                      </td>
+                      <td className="px-2 py-1.5 text-right border border-gray-300" style={{ width: '12%' }}>
+                        {formatCurrency(netAmount, invoiceData.currency)}
+                      </td>
+                      <td className="px-2 py-1.5 text-center border border-gray-300" style={{ width: '5%' }}>{vatDisplay}</td>
+                      <td className="px-2 py-1.5 text-right border border-gray-300" style={{ width: '10%' }}>
+                        {formatCurrency(vatAmount, invoiceData.currency)}
+                      </td>
+                      <td className="px-2 py-1.5 text-right border border-gray-300" style={{ width: '10%' }}>
                         {formatCurrency(grossAmount, invoiceData.currency)}
                       </td>
                     </tr>
@@ -338,7 +338,7 @@ export function InvoicePDFPreview({ invoiceData }: InvoicePDFPreviewProps) {
 
             {/* VAT Summary */}
             <div className="mb-5">
-              <table className="ml-auto w-3/5 text-xs">
+              <table className="ml-auto w-3/5 text-[8px]">
                 <thead>
                   <tr className="bg-gray-100">
                     <th className="px-2 py-1.5 text-left border border-gray-300">Stawka VAT</th>
@@ -396,9 +396,9 @@ export function InvoicePDFPreview({ invoiceData }: InvoicePDFPreviewProps) {
             </div>
 
             {shouldShowPlnBreakdown && plnTotals && (
-              <div className="mb-5">
+              <div className="mb-4">
                 <h3 className="mb-1 text-gray-700 text-sm font-medium uppercase tracking-wide">Przeliczenie pozycji na PLN</h3>
-                <p className="mb-3 text-xs text-gray-500">
+                <p className="mb-2 text-[8px] text-gray-500 leading-snug">
                   Kurs średni NBP (tabela A) z dnia {effectiveRateDate || selectedRateDate || '—'} wynosi{' '}
                   {conversionRate?.toFixed(4)} PLN.
                   {selectedRateDate &&
@@ -406,18 +406,18 @@ export function InvoicePDFPreview({ invoiceData }: InvoicePDFPreviewProps) {
                     selectedRateDate !== effectiveRateDate &&
                     ` (Wybrana data: ${selectedRateDate})`}
                 </p>
-                <table className="w-full mb-4 text-xs">
+                <table className="w-full mb-3 text-[8px]">
                   <thead>
                     <tr className="bg-gray-100">
-                      <th className="px-2 py-1.5 text-left border border-gray-300">Lp.</th>
-                      <th className="px-2 py-1.5 text-left border border-gray-300">Nazwa</th>
-                      <th className="px-2 py-1.5 text-center border border-gray-300">Ilość</th>
-                      <th className="px-2 py-1.5 text-center border border-gray-300">Jedn.</th>
-                      <th className="px-2 py-1.5 text-right border border-gray-300">Cena netto (PLN)</th>
-                      <th className="px-2 py-1.5 text-right border border-gray-300">Wartość netto (PLN)</th>
-                      <th className="px-2 py-1.5 text-center border border-gray-300">VAT</th>
-                      <th className="px-2 py-1.5 text-right border border-gray-300">Kwota VAT (PLN)</th>
-                      <th className="px-2 py-1.5 text-right border border-gray-300">Wartość brutto (PLN)</th>
+                      <th className="px-2 py-1.5 text-left border border-gray-300" style={{ width: '5%' }}>Lp.</th>
+                      <th className="px-2 py-1.5 text-left border border-gray-300" style={{ width: '34%' }}>Nazwa</th>
+                      <th className="px-2 py-1.5 text-center border border-gray-300" style={{ width: '7%' }}>Ilość</th>
+                      <th className="px-2 py-1.5 text-center border border-gray-300" style={{ width: '5%' }}>Jedn.</th>
+                      <th className="px-2 py-1.5 text-right border border-gray-300" style={{ width: '12%' }}>Cena netto (PLN)</th>
+                      <th className="px-2 py-1.5 text-right border border-gray-300" style={{ width: '12%' }}>Wartość netto (PLN)</th>
+                      <th className="px-2 py-1.5 text-center border border-gray-300" style={{ width: '5%' }}>VAT</th>
+                      <th className="px-2 py-1.5 text-right border border-gray-300" style={{ width: '10%' }}>Kwota VAT (PLN)</th>
+                      <th className="px-2 py-1.5 text-right border border-gray-300" style={{ width: '10%' }}>Wartość brutto (PLN)</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -425,21 +425,21 @@ export function InvoicePDFPreview({ invoiceData }: InvoicePDFPreviewProps) {
                       const vatDisplay = getVatLabel(item.vatRate);
                       return (
                         <tr key={item.index}>
-                          <td className="px-2 py-1.5 border border-gray-300">{item.index + 1}</td>
-                          <td className="px-2 py-1.5 border border-gray-300">{item.name || '___________'}</td>
-                          <td className="px-2 py-1.5 text-center border border-gray-300">{item.quantity}</td>
-                          <td className="px-2 py-1.5 text-center border border-gray-300">{item.unit}</td>
-                          <td className="px-2 py-1.5 text-right border border-gray-300">
+                          <td className="px-2 py-1.5 border border-gray-300" style={{ width: '5%' }}>{item.index + 1}</td>
+                          <td className="px-2 py-1.5 border border-gray-300 whitespace-normal break-words" style={{ width: '34%' }}>{item.name || '___________'}</td>
+                          <td className="px-2 py-1.5 text-center border border-gray-300" style={{ width: '7%' }}>{item.quantity}</td>
+                          <td className="px-2 py-1.5 text-center border border-gray-300" style={{ width: '5%' }}>{item.unit}</td>
+                          <td className="px-2 py-1.5 text-right border border-gray-300" style={{ width: '12%' }}>
                             {formatCurrency(item.netUnitPln, 'PLN')}
                           </td>
-                          <td className="px-2 py-1.5 text-right border border-gray-300">
+                          <td className="px-2 py-1.5 text-right border border-gray-300" style={{ width: '12%' }}>
                             {formatCurrency(item.netAmountPln, 'PLN')}
                           </td>
-                          <td className="px-2 py-1.5 text-center border border-gray-300">{vatDisplay}</td>
-                          <td className="px-2 py-1.5 text-right border border-gray-300">
+                          <td className="px-2 py-1.5 text-center border border-gray-300" style={{ width: '5%' }}>{vatDisplay}</td>
+                          <td className="px-2 py-1.5 text-right border border-gray-300" style={{ width: '10%' }}>
                             {formatCurrency(item.vatAmountPln, 'PLN')}
                           </td>
-                          <td className="px-2 py-1.5 text-right border border-gray-300">
+                          <td className="px-2 py-1.5 text-right border border-gray-300" style={{ width: '10%' }}>
                             {formatCurrency(item.grossAmountPln, 'PLN')}
                           </td>
                         </tr>
@@ -447,24 +447,24 @@ export function InvoicePDFPreview({ invoiceData }: InvoicePDFPreviewProps) {
                     })}
                   </tbody>
                 </table>
-                <table className="ml-auto w-3/5 text-xs">
+                <table className="ml-auto w-3/5 text-[8px]">
                   <tbody>
                     <tr>
                       <td className="px-2 py-1.5 text-right border border-gray-300">Razem netto (PLN):</td>
                       <td className="px-2 py-1.5 text-right border border-gray-300">
-                        {formatCurrency(plnTotals.net, 'PLN')}
+                        {` ${formatCurrency(plnTotals.net, 'PLN')}`}
                       </td>
                     </tr>
                     <tr>
                       <td className="px-2 py-1.5 text-right border border-gray-300">Razem VAT (PLN):</td>
                       <td className="px-2 py-1.5 text-right border border-gray-300">
-                        {formatCurrency(plnTotals.vat, 'PLN')}
+                        {` ${formatCurrency(plnTotals.vat, 'PLN')}`}
                       </td>
                     </tr>
                     <tr className="bg-gray-100">
                       <td className="px-2 py-1.5 text-right border border-gray-300">Do zapłaty (PLN):</td>
                       <td className="px-2 py-1.5 text-right border border-gray-300">
-                        {formatCurrency(plnTotals.gross, 'PLN')}
+                        {` ${formatCurrency(plnTotals.gross, 'PLN')}`}
                       </td>
                     </tr>
                   </tbody>
@@ -475,8 +475,8 @@ export function InvoicePDFPreview({ invoiceData }: InvoicePDFPreviewProps) {
             {/* Notes */}
             {invoiceData.notes && (
               <div className="mt-4 pt-3 border-t border-gray-300">
-                <p className="text-xs text-gray-700">Uwagi:</p>
-                <p className="text-xs mt-1">{invoiceData.notes}</p>
+                <p className="text-[8px] text-gray-700">Uwagi:</p>
+                <p className="text-[8px] mt-1 whitespace-pre-wrap">{invoiceData.notes}</p>
               </div>
             )}
           </div>

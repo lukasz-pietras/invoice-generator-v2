@@ -382,7 +382,8 @@
         width: 100%;
         border-collapse: collapse;
         margin-top: 20px;
-        font-size: 0.85rem;
+        font-size: 0.55rem;
+        table-layout: fixed;
       }
 
       th,
@@ -408,6 +409,40 @@
         gap: 8px;
       }
 
+      .totals-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 12px;
+        margin-top: 16px;
+      }
+
+      .totals-card {
+        border: 1px solid #dbe1ea;
+        border-radius: 10px;
+        background: #f3f4f6;
+        padding: 12px 14px;
+      }
+
+      .totals-card--highlight {
+        background: rgba(37, 99, 235, 0.08);
+        border-color: rgba(37, 99, 235, 0.25);
+      }
+
+      .totals-label {
+        margin: 0;
+        font-size: 0.68rem;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: #6b7280;
+      }
+
+      .totals-value {
+        margin: 6px 0 0;
+        font-size: 0.95rem;
+        font-weight: 600;
+        color: #1f2937;
+      }
+
       .summary div {
         display: flex;
         justify-content: space-between;
@@ -425,7 +460,7 @@
         padding: 14px;
         min-height: 60px;
         background: #f9fafb;
-        font-size: 0.85rem;
+        font-size: 0.55rem;
       }
 
       @media (max-width: 1200px) {
@@ -1327,15 +1362,15 @@
                 const vatLabel = getVatLabel(item.vatRate);
                 return `
                   <tr>
-                    <td class="num">${index + 1}</td>
-                    <td>${item.name || "-"}</td>
-                    <td class="num">${item.quantity.toFixed(2)}</td>
-                    <td>${item.unit || ""}</td>
-                    <td class="num">${formatCurrency(item.netPrice * rateValue, "PLN")}</td>
-                    <td class="num">${formatCurrency(net * rateValue, "PLN")}</td>
-                    <td class="num">${vatLabel}</td>
-                    <td class="num">${formatCurrency(vat * rateValue, "PLN")}</td>
-                    <td class="num">${formatCurrency(gross * rateValue, "PLN")}</td>
+                    <td class="num" style="width:5%;">${index + 1}</td>
+                    <td style="width:34%;word-break:break-word;">${item.name || "-"}</td>
+                    <td class="num" style="width:7%;">${item.quantity.toFixed(2)}</td>
+                    <td style="width:5%;">${item.unit || ""}</td>
+                    <td class="num" style="width:12%;">${formatCurrency(item.netPrice * rateValue, "PLN")}</td>
+                    <td class="num" style="width:12%;">${formatCurrency(net * rateValue, "PLN")}</td>
+                    <td class="num" style="width:5%;">${vatLabel}</td>
+                    <td class="num" style="width:10%;">${formatCurrency(vat * rateValue, "PLN")}</td>
+                    <td class="num" style="width:10%;">${formatCurrency(gross * rateValue, "PLN")}</td>
                   </tr>
                 `;
               })
@@ -1343,9 +1378,9 @@
           : "";
         const plnSummaryHtml = showPlnBreakdown
           ? `
-          <div class="summary" style="margin-top:16px;">
+          <div class="summary" style="margin-top:14px;">
             <div style="font-weight:600;">Przeliczenie pozycji na PLN</div>
-            <p class="exchange-rate-muted" style="margin-top:6px;">
+            <p class="exchange-rate-muted" style="margin:4px 0 8px;font-size:0.55rem;line-height:1.35;">
               Kurs sredni NBP (tabela A) z dnia ${
                 state.exchangeRate.effectiveDate || state.exchangeRate.targetDate || "-"
               }: ${state.exchangeRate.value.toFixed(4)} PLN${
@@ -1356,18 +1391,18 @@
                 : ""
             }.
             </p>
-            <table>
+            <table style="margin-top:8px;margin-bottom:10px;">
               <thead>
                 <tr>
                   <th style="width:40px;">Lp.</th>
-                  <th>Nazwa</th>
-                  <th style="width:80px;">Ilosc</th>
-                  <th style="width:80px;">Jedn.</th>
-                  <th style="width:120px;">Cena netto (PLN)</th>
-                  <th style="width:150px;">Wartosc netto (PLN)</th>
-                  <th style="width:90px;">VAT</th>
-                  <th style="width:150px;">Kwota VAT (PLN)</th>
-                  <th style="width:150px;">Wartosc brutto (PLN)</th>
+                  <th style="width:34%;">Nazwa</th>
+                  <th style="width:7%;">Ilosc</th>
+                  <th style="width:5%;">Jedn.</th>
+                  <th style="width:12%;">Cena netto (PLN)</th>
+                  <th style="width:12%;">Wartosc netto (PLN)</th>
+                  <th style="width:5%;">VAT</th>
+                  <th style="width:10%;">Kwota VAT (PLN)</th>
+                  <th style="width:10%;">Wartosc brutto (PLN)</th>
                 </tr>
               </thead>
               <tbody>
@@ -1380,15 +1415,15 @@
             <div class="summary">
               <div>
                 <span>Suma netto (PLN)</span>
-                <strong>${formatCurrency(plnTotals.net, "PLN")}</strong>
+                <strong> ${formatCurrency(plnTotals.net, "PLN")}</strong>
               </div>
               <div>
                 <span>Suma VAT (PLN)</span>
-                <strong>${formatCurrency(plnTotals.vat, "PLN")}</strong>
+                <strong> ${formatCurrency(plnTotals.vat, "PLN")}</strong>
               </div>
               <div style="font-size:1rem;">
                 <span>Suma brutto (PLN)</span>
-                <strong>${formatCurrency(plnTotals.gross, "PLN")}</strong>
+                <strong> ${formatCurrency(plnTotals.gross, "PLN")}</strong>
               </div>
             </div>
           </div>
@@ -1451,14 +1486,14 @@
             <thead>
               <tr>
                 <th style="width:40px;">Lp.</th>
-                <th>Nazwa</th>
-                <th style="width:80px;">Ilosc</th>
-                <th style="width:80px;">Jedn.</th>
-                <th style="width:120px;">Cena netto</th>
-                <th style="width:150px;">Wartosc netto</th>
-                <th style="width:90px;">VAT</th>
-                <th style="width:150px;">Kwota VAT</th>
-                <th style="width:150px;">Wartosc brutto</th>
+                <th style="width:34%;">Nazwa</th>
+                <th style="width:7%;">Ilosc</th>
+                <th style="width:5%;">Jedn.</th>
+                <th style="width:12%;">Cena netto</th>
+                <th style="width:12%;">Wartosc netto</th>
+                <th style="width:5%;">VAT</th>
+                <th style="width:10%;">Kwota VAT</th>
+                <th style="width:10%;">Wartosc brutto</th>
               </tr>
             </thead>
             <tbody>
@@ -1472,15 +1507,15 @@
                         const vatLabel = getVatLabel(item.vatRate);
                         return `
                           <tr>
-                            <td class="num">${index + 1}</td>
-                            <td>${item.name || "-"}</td>
-                            <td class="num">${item.quantity.toFixed(2)}</td>
-                            <td>${item.unit || ""}</td>
-                            <td class="num">${formatCurrency(item.netPrice)}</td>
-                            <td class="num">${formatCurrency(net)}</td>
-                            <td class="num">${vatLabel}</td>
-                            <td class="num">${formatCurrency(vat)}</td>
-                            <td class="num">${formatCurrency(gross)}</td>
+                            <td class="num" style="width:5%;">${index + 1}</td>
+                            <td style="width:34%;word-break:break-word;">${item.name || "-"}</td>
+                            <td class="num" style="width:7%;">${item.quantity.toFixed(2)}</td>
+                            <td style="width:5%;">${item.unit || ""}</td>
+                            <td class="num" style="width:12%;">${formatCurrency(item.netPrice)}</td>
+                            <td class="num" style="width:12%;">${formatCurrency(net)}</td>
+                            <td class="num" style="width:5%;">${vatLabel}</td>
+                            <td class="num" style="width:10%;">${formatCurrency(vat)}</td>
+                            <td class="num" style="width:10%;">${formatCurrency(gross)}</td>
                           </tr>
                         `;
                       })
@@ -1489,18 +1524,18 @@
               }
             </tbody>
           </table>
-          <div class="summary">
-            <div>
-              <span>Suma netto</span>
-              <strong>${formatCurrency(totals.netTotal)}</strong>
+          <div class="totals-grid">
+            <div class="totals-card">
+              <p class="totals-label">Suma netto</p>
+              <p class="totals-value">${formatCurrency(totals.netTotal)}</p>
             </div>
-            <div>
-              <span>Suma VAT</span>
-              <strong>${formatCurrency(totals.vatTotal)}</strong>
+            <div class="totals-card">
+              <p class="totals-label">Suma VAT</p>
+              <p class="totals-value">${formatCurrency(totals.vatTotal)}</p>
             </div>
-            <div style="font-size:1rem;">
-              <span>Suma brutto</span>
-              <strong>${formatCurrency(totals.grossTotal)}</strong>
+            <div class="totals-card totals-card--highlight">
+              <p class="totals-label">Suma brutto</p>
+              <p class="totals-value">${formatCurrency(totals.grossTotal)}</p>
             </div>
           </div>
           <div class="summary" style="margin-top:16px;">
