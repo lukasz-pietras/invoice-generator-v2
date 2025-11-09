@@ -76,6 +76,51 @@
         gap: 16px;
       }
 
+      .section-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .inline {
+        display: inline-flex;
+        gap: 8px;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+
+      .party-grid {
+        display: grid;
+        gap: 16px;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      }
+
+      .party-card {
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 18px;
+        background: #ffffff;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+
+      .party-card h3 {
+        margin: 0;
+        font-size: 1rem;
+      }
+
+      .party-controls {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+      }
+
+      .party-controls select {
+        flex: 1;
+      }
+
       .section h2 {
         font-size: 1.05rem;
       }
@@ -401,92 +446,93 @@
           <div class="logo-box" id="logo-preview">Brak logo</div>
         </div>
 
-        <div class="section" aria-labelledby="seller">
-          <h2 id="seller">Sprzedawca</h2>
-          <div class="saved-row">
-            <select id="seller-select">
-              <option value="">Wybierz zapisane dane</option>
-            </select>
-            <button class="btn btn-secondary" type="button" data-action="load-seller">
-              Wczytaj
-            </button>
-          </div>
-          <div class="saved-actions">
-            <button class="btn btn-secondary" type="button" id="export-btn">
-              Eksportuj
-            </button>
-            <button class="btn btn-secondary" type="button" data-action="save-seller">
-              Zapisz
-            </button>
-          </div>
-          <div class="grid">
-            <label>
-              Nazwa
-              <input type="text" data-field="seller.name" placeholder="Nazwa firmy" />
-            </label>
-            <label>
-              Adres
-              <input type="text" data-field="seller.address" placeholder="Ulica i numer" />
-            </label>
-            <div class="grid two">
-              <label>
-                Kod pocztowy
-                <input type="text" data-field="seller.postalCode" placeholder="00-000" />
-              </label>
-              <label>
-                Miasto
-                <input type="text" data-field="seller.city" placeholder="Miasto" />
-              </label>
+        <div class="section" aria-labelledby="parties">
+          <div class="section-head">
+            <h2 id="parties">Kontrahenci</h2>
+            <div class="inline">
+              <button class="btn btn-secondary" type="button" id="import-btn">
+                Wczytaj
+              </button>
+              <button class="btn btn-secondary" type="button" id="export-btn">
+                Eksportuj
+              </button>
             </div>
-            <label>
-              NIP
-              <input type="text" data-field="seller.nip" placeholder="0000000000" />
-            </label>
-            <label>
-              Numer konta
-              <input type="text" data-field="seller.bankAccount" placeholder="00 0000 0000 0000 0000 0000 0000" />
-            </label>
           </div>
-        </div>
-
-        <div class="section" aria-labelledby="buyer">
-          <h2 id="buyer">Nabywca</h2>
-          <div class="saved-row">
-            <select id="buyer-select">
-              <option value="">Wybierz zapisane dane</option>
-            </select>
-            <button class="btn btn-secondary" type="button" data-action="load-buyer">
-              Wczytaj
-            </button>
-          </div>
-          <div class="saved-actions">
-            <button class="btn btn-secondary" type="button" data-action="save-buyer">
-              Zapisz
-            </button>
-          </div>
-          <div class="grid">
-            <label>
-              Nazwa
-              <input type="text" data-field="buyer.name" placeholder="Nazwa firmy" />
-            </label>
-            <label>
-              Adres
-              <input type="text" data-field="buyer.address" placeholder="Ulica i numer" />
-            </label>
-            <div class="grid two">
-              <label>
-                Kod pocztowy
-                <input type="text" data-field="buyer.postalCode" placeholder="00-000" />
-              </label>
-              <label>
-                Miasto
-                <input type="text" data-field="buyer.city" placeholder="Miasto" />
-              </label>
+          <div class="party-grid">
+            <div class="party-card" aria-labelledby="seller-heading">
+              <h3 id="seller-heading">Sprzedawca</h3>
+              <div class="party-controls">
+                <select id="seller-select">
+                  <option value="">Wybierz zapisane dane</option>
+                </select>
+                <button class="btn btn-secondary" type="button" data-action="save-seller">
+                  Zapisz
+                </button>
+              </div>
+              <div class="grid">
+                <label>
+                  Nazwa
+                  <input type="text" data-field="seller.name" placeholder="Nazwa firmy" />
+                </label>
+                <label>
+                  Adres
+                  <input type="text" data-field="seller.address" placeholder="Ulica i numer" />
+                </label>
+                <div class="grid two">
+                  <label>
+                    Kod pocztowy
+                    <input type="text" data-field="seller.postalCode" placeholder="00-000" />
+                  </label>
+                  <label>
+                    Miasto
+                    <input type="text" data-field="seller.city" placeholder="Miasto" />
+                  </label>
+                </div>
+                <label>
+                  NIP
+                  <input type="text" data-field="seller.nip" placeholder="0000000000" />
+                </label>
+                <label>
+                  Numer konta
+                  <input type="text" data-field="seller.bankAccount" placeholder="00 0000 0000 0000 0000 0000 0000" />
+                </label>
+              </div>
             </div>
-            <label>
-              NIP
-              <input type="text" data-field="buyer.nip" placeholder="0000000000" />
-            </label>
+            <div class="party-card" aria-labelledby="buyer-heading">
+              <h3 id="buyer-heading">Nabywca</h3>
+              <div class="party-controls">
+                <select id="buyer-select">
+                  <option value="">Wybierz zapisane dane</option>
+                </select>
+                <button class="btn btn-secondary" type="button" data-action="save-buyer">
+                  Zapisz
+                </button>
+              </div>
+              <div class="grid">
+                <label>
+                  Nazwa
+                  <input type="text" data-field="buyer.name" placeholder="Nazwa firmy" />
+                </label>
+                <label>
+                  Adres
+                  <input type="text" data-field="buyer.address" placeholder="Ulica i numer" />
+                </label>
+                <div class="grid two">
+                  <label>
+                    Kod pocztowy
+                    <input type="text" data-field="buyer.postalCode" placeholder="00-000" />
+                  </label>
+                  <label>
+                    Miasto
+                    <input type="text" data-field="buyer.city" placeholder="Miasto" />
+                  </label>
+                </div>
+                <label>
+                  NIP
+                  <input type="text" data-field="buyer.nip" placeholder="0000000000" />
+                </label>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -610,7 +656,10 @@
       let state = clone(defaultState);
       const STORAGE_KEY = "invoiceCompanies";
       const storageSnapshot = loadStoredData();
-      const storedData = storageSnapshot.data;
+      const storedData = {
+        seller: storageSnapshot.data.seller || {},
+        buyer: storageSnapshot.data.buyer || {},
+      };
       if (storageSnapshot.migrated) {
         persistStorage();
       }
@@ -1006,14 +1055,16 @@
           alert("Podaj nazwe firmy, aby zapisac dane.");
           return;
         }
-        storedData[type][data.name] = data;
+        storedData[type][data.name] = clone(data);
         persistStorage();
         populateCompanySelect(type);
         document.getElementById(`${type}-select`).value = data.name;
+        syncForm();
+        renderPreview();
         alert("Dane zapisane.");
       }
 
-      function loadCompany(type) {
+      function importCompanies() {
         const input = document.createElement("input");
         input.type = "file";
         input.accept = "application/json";
@@ -1021,29 +1072,75 @@
           const file = event.target.files?.[0];
           if (!file) return;
 
+          if (!file) return;
+
           const reader = new FileReader();
           reader.onload = () => {
             try {
-              const data = JSON.parse(reader.result);
-              if (!data || typeof data !== "object") {
+              const parsed = JSON.parse(reader.result);
+              if (!parsed || typeof parsed !== "object") {
                 throw new Error("Nieprawidlowy format JSON.");
               }
 
-              const mapped = mapImportedCompany(type, data);
-              if (!mapped.name) {
-                throw new Error("Brak pola 'name'.");
+              const summary = mergeImportedData(parsed);
+              persistStorage();
+              populateCompanySelect("seller");
+              populateCompanySelect("buyer");
+
+              let shouldRefresh = false;
+
+              if (summary.sellerImported) {
+                if (state.seller.name && storedData.seller[state.seller.name]) {
+                  state.seller = clone(storedData.seller[state.seller.name]);
+                  document.getElementById("seller-select").value = state.seller.name;
+                } else {
+                  const firstSeller = Object.keys(storedData.seller)[0];
+                  if (firstSeller) {
+                    state.seller = clone(storedData.seller[firstSeller]);
+                    document.getElementById("seller-select").value = firstSeller;
+                  }
+                }
+                shouldRefresh = true;
+              } else if (!state.seller.name) {
+                const firstSeller = Object.keys(storedData.seller)[0];
+                if (firstSeller) {
+                  state.seller = clone(storedData.seller[firstSeller]);
+                  document.getElementById("seller-select").value = firstSeller;
+                  shouldRefresh = true;
+                }
               }
 
-              storedData[type][mapped.name] = mapped;
-              persistStorage();
-              populateCompanySelect(type);
+              if (summary.buyerImported) {
+                if (state.buyer.name && storedData.buyer[state.buyer.name]) {
+                  state.buyer = clone(storedData.buyer[state.buyer.name]);
+                  document.getElementById("buyer-select").value = state.buyer.name;
+                } else {
+                  const firstBuyer = Object.keys(storedData.buyer)[0];
+                  if (firstBuyer) {
+                    state.buyer = clone(storedData.buyer[firstBuyer]);
+                    document.getElementById("buyer-select").value = firstBuyer;
+                  }
+                }
+                shouldRefresh = true;
+              } else if (!state.buyer.name) {
+                const firstBuyer = Object.keys(storedData.buyer)[0];
+                if (firstBuyer) {
+                  state.buyer = clone(storedData.buyer[firstBuyer]);
+                  document.getElementById("buyer-select").value = firstBuyer;
+                  shouldRefresh = true;
+                }
+              }
 
-              state[type] = clone(mapped);
-              document.getElementById(`${type}-select`).value = mapped.name;
-              syncForm();
-              renderPreview();
+              if (shouldRefresh) {
+                syncForm();
+                renderPreview();
+              }
 
-              alert("Dane wczytane pomyslnie.");
+              const message =
+                summary.sellerImported || summary.buyerImported
+                  ? `Zaimportowano: ${summary.sellerImported} sprzedawca, ${summary.buyerImported} nabywca.`
+                  : "Brak nowych danych do importu.";
+              alert(message);
             } catch (error) {
               console.error(error);
               alert("Nieprawidlowy plik JSON.");
@@ -1054,35 +1151,108 @@
         input.click();
       }
 
-      function mapImportedCompany(type, data) {
-        if (data && data.name && data.address) {
-          const result = {
-            name: data.name,
-            address: data.address,
-            postalCode: data.postalCode || "",
-            city: data.city || "",
-            nip: data.nip || "",
-            bankAccount: type === "seller" ? data.account || data.bankAccount || "" : undefined,
-          };
+      function mergeImportedData(data) {
+        let sellerImported = 0;
+        let buyerImported = 0;
 
-          if (!result.postalCode && !result.city && typeof data.address === "string") {
-            const segments = data.address.split(" ");
-            if (segments.length >= 2) {
-              result.postalCode = segments.slice(-2, -1)[0];
-              result.city = segments.slice(-1)[0];
+        if (data.seller || data.buyer) {
+          if (data.seller && typeof data.seller === "object") {
+            const sellerEntries = Array.isArray(data.seller)
+              ? data.seller.map((entry) => [entry?.name || "", entry])
+              : Object.entries(data.seller);
+            sellerEntries.forEach(([name, entry]) => {
+              const mapped = mapImportedCompany("seller", { ...entry, name: entry?.name || name });
+              if (mapped.name) {
+                storedData.seller[mapped.name] = mapped;
+                sellerImported += 1;
+              }
+            });
+          }
+          if (data.buyer && typeof data.buyer === "object") {
+            const buyerEntries = Array.isArray(data.buyer)
+              ? data.buyer.map((entry) => [entry?.name || "", entry])
+              : Object.entries(data.buyer);
+            buyerEntries.forEach(([name, entry]) => {
+              const mapped = mapImportedCompany("buyer", { ...entry, name: entry?.name || name });
+              if (mapped.name) {
+                storedData.buyer[mapped.name] = mapped;
+                buyerImported += 1;
+              }
+            });
+          }
+        } else if (data.name) {
+          const inferredType =
+            data.account || data.bankAccount || data.bank_account ? "seller" : "buyer";
+          const mapped = mapImportedCompany(inferredType, data);
+          if (mapped.name) {
+            storedData[inferredType][mapped.name] = mapped;
+            if (inferredType === "seller") {
+              sellerImported += 1;
+            } else {
+              buyerImported += 1;
             }
           }
-
-          return result;
+        } else {
+          throw new Error("Nieprawidlowy format JSON.");
         }
-        return {
-          name: data.name || "",
-          address: data.address || "",
-          postalCode: data.postalCode || "",
-          city: data.city || "",
-          nip: data.nip || "",
-          bankAccount: type === "seller" ? data.account || data.bankAccount || "" : undefined,
+
+        return { sellerImported, buyerImported };
+      }
+
+      function mapImportedCompany(type, data) {
+        const record = {
+          name: (data.name || "").toString().trim(),
+          address: (data.address || "").toString().trim(),
+          postalCode: (data.postalCode || data.post_code || "").toString().trim(),
+          city: (data.city || "").toString().trim(),
+          nip: (data.nip || "").toString().trim(),
         };
+
+        if (type === "seller") {
+          record.bankAccount = (
+            data.account ||
+            data.bankAccount ||
+            data.bank_account ||
+            ""
+          )
+            .toString()
+            .trim();
+        }
+
+        if (record.address) {
+          const match = record.address.match(/^(.*?)(\d{2}-\d{3})\s+(.+)$/);
+          if (match) {
+            record.address = match[1].trim();
+            if (!record.postalCode) {
+              record.postalCode = match[2];
+            }
+            if (!record.city) {
+              record.city = match[3];
+            }
+          }
+        }
+
+        if (type !== "seller") {
+          delete record.bankAccount;
+        } else if (!record.bankAccount) {
+          record.bankAccount = "";
+        }
+
+        return record;
+      }
+
+      function handleSelectChange(type) {
+        const select = document.getElementById(`${type}-select`);
+        const entry = storedData[type][select.value];
+        if (!entry) {
+          state[type] = clone(defaultState[type]);
+          syncForm();
+          renderPreview();
+          return;
+        }
+        state[type] = clone(entry);
+        syncForm();
+        renderPreview();
       }
 
       function exportData() {
@@ -1152,6 +1322,14 @@
             input.value = value ?? "";
           }
         });
+        const sellerSelect = document.getElementById("seller-select");
+        const buyerSelect = document.getElementById("buyer-select");
+        if (sellerSelect) {
+          sellerSelect.value = state.seller.name || "";
+        }
+        if (buyerSelect) {
+          buyerSelect.value = state.buyer.name || "";
+        }
         renderItems();
         renderLogo();
       }
@@ -1367,6 +1545,9 @@
           });
 
         document
+          .getElementById("import-btn")
+          .addEventListener("click", importCompanies);
+        document
           .getElementById("export-btn")
           .addEventListener("click", exportData);
 
@@ -1374,15 +1555,15 @@
           .querySelector("[data-action='save-seller']")
           .addEventListener("click", () => saveCompany("seller"));
         document
-          .querySelector("[data-action='load-seller']")
-          .addEventListener("click", () => loadCompany("seller"));
+          .getElementById("seller-select")
+          .addEventListener("change", () => handleSelectChange("seller"));
 
         document
           .querySelector("[data-action='save-buyer']")
           .addEventListener("click", () => saveCompany("buyer"));
         document
-          .querySelector("[data-action='load-buyer']")
-          .addEventListener("click", () => loadCompany("buyer"));
+          .getElementById("buyer-select")
+          .addEventListener("change", () => handleSelectChange("buyer"));
 
         document
           .getElementById("download-btn")
@@ -1390,6 +1571,18 @@
       }
 
       function init() {
+        if (!state.seller.name) {
+          const firstSeller = Object.keys(storedData.seller)[0];
+          if (firstSeller) {
+            state.seller = clone(storedData.seller[firstSeller]);
+          }
+        }
+        if (!state.buyer.name) {
+          const firstBuyer = Object.keys(storedData.buyer)[0];
+          if (firstBuyer) {
+            state.buyer = clone(storedData.buyer[firstBuyer]);
+          }
+        }
         populateCompanySelect("seller");
         populateCompanySelect("buyer");
         syncForm();
