@@ -116,79 +116,99 @@ export function InvoicePDFPreview({ invoiceData }: InvoicePDFPreviewProps) {
     : null;
 
   const handleDownload = () => {
-    // Create a simple HTML version for printing/PDF
-    const printWindow = window.open('', '_blank');
-    if (!printWindow) return;
+    const previewElement = document.getElementById('invoice-preview');
+    if (!previewElement) {
+      return;
+    }
 
-    const htmlContent = document.getElementById('invoice-preview')?.innerHTML || '';
-    
-    printWindow.document.write(`
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <title>Faktura ${invoiceData.invoiceNumber}</title>
-          <style>
-            body { 
-              font-family: Arial, sans-serif; 
-              padding: 40px;
-              color: #000;
-              background: white;
-            }
-            table { 
-              width: 100%; 
-              border-collapse: collapse; 
-              margin: 20px 0;
-            }
-            th, td { 
-              border: 1px solid #333; 
-              padding: 8px; 
-              text-align: left;
-            }
-            th { 
-              background-color: #f5f5f5;
-            }
-            .header { 
-              margin-bottom: 30px; 
-            }
-            .section { 
-              margin: 20px 0; 
-            }
-            .company-info {
-              display: inline-block;
-              width: 45%;
-              vertical-align: top;
-              margin: 10px 2%;
-            }
-            .summary {
-              margin-top: 20px;
-              text-align: right;
-            }
-            .logo {
-              text-align: center;
-              margin-bottom: 20px;
-            }
-            .logo img {
-              max-height: 80px;
-            }
-            @media print {
-              body { padding: 20px; }
-            }
-          </style>
-        </head>
-        <body>
-          ${htmlContent}
-        </body>
-      </html>
-    `);
-    
-    printWindow.document.close();
+    const iframe = document.createElement('iframe');
+    iframe.style.position = 'fixed';
+    iframe.style.right = '0';
+    iframe.style.bottom = '0';
+    iframe.style.width = '0';
+    iframe.style.height = '0';
+    iframe.style.border = '0';
+    iframe.style.visibility = 'hidden';
+    document.body.appendChild(iframe);
+
+    const iframeWindow = iframe.contentWindow;
+    const iframeDocument = iframeWindow?.document;
+
+    if (!iframeWindow || !iframeDocument) {
+      iframe.remove();
+      return;
+    }
+
+    iframeDocument.open();
+    iframeDocument.write('<!DOCTYPE html><html lang="pl"><head></head><body></body></html>');
+
+    const headElements = document.querySelectorAll('style, link[rel="stylesheet"]');
+    headElements.forEach(node => {
+      iframeDocument.head.appendChild(node.cloneNode(true));
+    });
+
+    const printStyles = iframeDocument.createElement('style');
+    printStyles.textContent = `
+      @page {
+        size: A4;
+        margin: 0;
+      }
+
+      html, body {
+        margin: 0;
+        padding: 0;
+        background: #f3f4f6;
+      }
+
+      body {
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+      }
+
+      #invoice-preview-print {
+        width: 210mm;
+        min-height: 297mm;
+        box-sizing: border-box;
+        background: #ffffff;
+        margin: 0 auto;
+        box-shadow: none !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+    `;
+    iframeDocument.head.appendChild(printStyles);
+
+    const documentTitle = invoiceData.invoiceNumber
+      ? `Faktura ${invoiceData.invoiceNumber}`
+      : 'Faktura';
+    iframeDocument.title = documentTitle;
+
+    const clonedPreview = previewElement.cloneNode(true) as HTMLElement;
+    clonedPreview.id = 'invoice-preview-print';
+    iframeDocument.body.appendChild(clonedPreview);
+    iframeDocument.body.style.margin = '0';
+    iframeDocument.body.style.backgroundColor = '#f3f4f6';
+    iframeDocument.close();
+
+    const cleanup = () => {
+      iframeWindow.onafterprint = null;
+      if (iframe.parentNode) {
+        iframe.parentNode.removeChild(iframe);
+      }
+    };
+
+    iframeWindow.onafterprint = cleanup;
+
     setTimeout(() => {
-      printWindow.print();
-    }, 250);
+      iframeWindow.focus();
+      iframeWindow.print();
+      setTimeout(cleanup, 2000);
+    }, 150);
   };
 
   return (
-    <div className="w-1/2 bg-gray-100 flex flex-col">
+    <div className="flex-1 min-w-[980px] bg-gray-100 flex flex-col">
       <div className="p-6 bg-white border-b border-gray-200 flex items-center justify-between">
         <div>
           <h2>Podgląd faktury</h2>
@@ -196,16 +216,16 @@ export function InvoicePDFPreview({ invoiceData }: InvoicePDFPreviewProps) {
         </div>
         <Button onClick={handleDownload}>
           <Download className="mr-2 h-4 w-4" />
-          Drukuj / Zapisz PDF
+          Pobierz / wydrukuj
         </Button>
       </div>
 
-      <ScrollArea className="flex-1">
+      <ScrollArea className="flex-1 overflow-auto">
         <div className="p-8 flex justify-center">
           <div
             id="invoice-preview"
-            className="bg-white shadow-lg p-12 max-w-4xl w-full"
-            style={{ minHeight: '297mm' }}
+            className="bg-white shadow-lg p-12"
+            style={{ width: '210mm', minHeight: '297mm', boxSizing: 'border-box' }}
           >
             {/* Logo */}
             {invoiceData.logo && (
