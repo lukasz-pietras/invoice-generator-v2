@@ -208,11 +208,11 @@ export function InvoicePDFPreview({ invoiceData }: InvoicePDFPreviewProps) {
   };
 
   return (
-    <div className="flex-1 min-w-[980px] bg-gray-100 flex flex-col">
-      <div className="p-6 bg-white border-b border-gray-200 flex items-center justify-between">
+    <div className="flex-1 min-w-[960px] bg-gray-100 flex flex-col">
+      <div className="px-5 py-4 bg-white border-b border-gray-200 flex items-center justify-between">
         <div>
           <h2>Podgląd faktury</h2>
-          <p className="text-gray-600">Użyj Ctrl+P lub przycisku poniżej, aby zapisać jako PDF</p>
+          <p className="text-sm text-gray-600">Użyj Ctrl+P lub przycisku poniżej, aby zapisać jako PDF</p>
         </div>
         <Button onClick={handleDownload}>
           <Download className="mr-2 h-4 w-4" />
@@ -221,60 +221,66 @@ export function InvoicePDFPreview({ invoiceData }: InvoicePDFPreviewProps) {
       </div>
 
       <ScrollArea className="flex-1 overflow-auto">
-        <div className="p-8 flex justify-center">
+        <div className="p-6 flex justify-center">
           <div
             id="invoice-preview"
-            className="bg-white shadow-lg p-12"
-            style={{ width: '210mm', minHeight: '297mm', boxSizing: 'border-box' }}
+            className="bg-white shadow-lg px-8 py-7"
+            style={{ width: '210mm', minHeight: '297mm', boxSizing: 'border-box', fontSize: '13px', lineHeight: 1.45 }}
           >
             {/* Logo */}
             {invoiceData.logo && (
-              <div className="flex justify-center mb-8">
-                <img src={invoiceData.logo} alt="Logo" className="max-h-20 object-contain" />
+              <div className="flex justify-center mb-6">
+                <img src={invoiceData.logo} alt="Logo" className="max-h-16 object-contain" />
               </div>
             )}
 
             {/* Header */}
-            <div className="mb-8">
-              <h1 className="mb-2">FAKTURA VAT</h1>
-              <div className="text-gray-700">
+            <div className="mb-5">
+              <h1 className="mb-1 text-xl font-semibold tracking-wide">FAKTURA VAT</h1>
+              <div className="text-gray-700 text-sm">
                 <p>Nr: {invoiceData.invoiceNumber || '___________'}</p>
               </div>
             </div>
 
-            {/* Dates and Payment */}
-            <div className="grid grid-cols-3 gap-4 mb-8 text-sm">
-              <div>
-                <p className="text-gray-600">Data wystawienia:</p>
-                <p>{formatDate(invoiceData.issueDate)}</p>
-              </div>
-              <div>
-                <p className="text-gray-600">Data sprzedaży:</p>
-                <p>{formatDate(invoiceData.saleDate)}</p>
-              </div>
-              <div>
-                <p className="text-gray-600">Termin płatności:</p>
-                <p>{formatDate(invoiceData.paymentDeadline)}</p>
+            {/* Dates & Payment */}
+            <div className="mb-5">
+              <div className="grid grid-cols-2 gap-x-6 gap-y-3 rounded-md border border-gray-200 bg-gray-50 px-4 py-3 text-xs">
+                <div>
+                  <p className="text-[10px] uppercase tracking-[0.18em] text-gray-500">Data wystawienia</p>
+                  <p className="font-semibold text-gray-900">{formatDate(invoiceData.issueDate) || 'brak'}</p>
+                </div>
+                <div>
+                  <p className="text-[10px] uppercase tracking-[0.18em] text-gray-500">Data sprzedaży</p>
+                  <p className="font-semibold text-gray-900">{formatDate(invoiceData.saleDate) || 'brak'}</p>
+                </div>
+                <div>
+                  <p className="text-[10px] uppercase tracking-[0.18em] text-gray-500">Termin płatności</p>
+                  <p className="font-semibold text-gray-900">{formatDate(invoiceData.paymentDeadline) || 'brak'}</p>
+                </div>
+                <div>
+                  <p className="text-[10px] uppercase tracking-[0.18em] text-gray-500">Metoda płatności</p>
+                  <p className="font-semibold text-gray-900">{invoiceData.paymentMethod || 'brak'}</p>
+                </div>
               </div>
             </div>
 
             {/* Seller and Buyer */}
-            <div className="grid grid-cols-2 gap-8 mb-8">
+            <div className="grid grid-cols-2 gap-6 mb-5">
               <div>
-                <h3 className="mb-3 text-gray-700">Sprzedawca:</h3>
-                <div className="space-y-1 text-sm">
+                <h3 className="mb-2 text-gray-700 text-sm font-medium uppercase tracking-wide">Sprzedawca:</h3>
+                <div className="space-y-1 text-xs">
                   <p>{invoiceData.seller.name || '___________'}</p>
                   <p>{invoiceData.seller.address || '___________'}</p>
                   <p>{invoiceData.seller.postalCode} {invoiceData.seller.city}</p>
                   <p>NIP: {invoiceData.seller.nip || '___________'}</p>
                   {invoiceData.seller.bankAccount && (
-                    <p className="mt-2">Nr konta: {invoiceData.seller.bankAccount}</p>
+                    <p className="mt-1">Nr konta: {invoiceData.seller.bankAccount}</p>
                   )}
                 </div>
               </div>
               <div>
-                <h3 className="mb-3 text-gray-700">Nabywca:</h3>
-                <div className="space-y-1 text-sm">
+                <h3 className="mb-2 text-gray-700 text-sm font-medium uppercase tracking-wide">Nabywca:</h3>
+                <div className="space-y-1 text-xs">
                   <p>{invoiceData.buyer.name || '___________'}</p>
                   <p>{invoiceData.buyer.address || '___________'}</p>
                   <p>{invoiceData.buyer.postalCode} {invoiceData.buyer.city}</p>
@@ -284,18 +290,18 @@ export function InvoicePDFPreview({ invoiceData }: InvoicePDFPreviewProps) {
             </div>
 
             {/* Items Table */}
-            <table className="w-full mb-6 text-sm">
+            <table className="w-full mb-5 text-xs">
               <thead>
                 <tr className="bg-gray-100">
-                  <th className="p-2 text-left border border-gray-300">Lp.</th>
-                  <th className="p-2 text-left border border-gray-300">Nazwa</th>
-                  <th className="p-2 text-center border border-gray-300">Ilość</th>
-                  <th className="p-2 text-center border border-gray-300">Jedn.</th>
-                  <th className="p-2 text-right border border-gray-300">Cena netto</th>
-                  <th className="p-2 text-right border border-gray-300">Wartość netto</th>
-                  <th className="p-2 text-center border border-gray-300">VAT</th>
-                  <th className="p-2 text-right border border-gray-300">Kwota VAT</th>
-                  <th className="p-2 text-right border border-gray-300">Wartość brutto</th>
+                  <th className="px-2 py-1.5 text-left border border-gray-300">Lp.</th>
+                  <th className="px-2 py-1.5 text-left border border-gray-300">Nazwa</th>
+                  <th className="px-2 py-1.5 text-center border border-gray-300">Ilość</th>
+                  <th className="px-2 py-1.5 text-center border border-gray-300">Jedn.</th>
+                  <th className="px-2 py-1.5 text-right border border-gray-300">Cena netto</th>
+                  <th className="px-2 py-1.5 text-right border border-gray-300">Wartość netto</th>
+                  <th className="px-2 py-1.5 text-center border border-gray-300">VAT</th>
+                  <th className="px-2 py-1.5 text-right border border-gray-300">Kwota VAT</th>
+                  <th className="px-2 py-1.5 text-right border border-gray-300">Wartość brutto</th>
                 </tr>
               </thead>
               <tbody>
@@ -307,21 +313,21 @@ export function InvoicePDFPreview({ invoiceData }: InvoicePDFPreviewProps) {
 
                   return (
                     <tr key={item.id}>
-                      <td className="p-2 border border-gray-300">{index + 1}</td>
-                      <td className="p-2 border border-gray-300">{item.name || '___________'}</td>
-                      <td className="p-2 text-center border border-gray-300">{item.quantity}</td>
-                      <td className="p-2 text-center border border-gray-300">{item.unit}</td>
-                    <td className="p-2 text-right border border-gray-300">
+                      <td className="px-2 py-1.5 border border-gray-300">{index + 1}</td>
+                      <td className="px-2 py-1.5 border border-gray-300">{item.name || '___________'}</td>
+                      <td className="px-2 py-1.5 text-center border border-gray-300">{item.quantity}</td>
+                      <td className="px-2 py-1.5 text-center border border-gray-300">{item.unit}</td>
+                    <td className="px-2 py-1.5 text-right border border-gray-300">
                       {formatCurrency(item.netPrice, invoiceData.currency)}
                     </td>
-                    <td className="p-2 text-right border border-gray-300">
+                    <td className="px-2 py-1.5 text-right border border-gray-300">
                       {formatCurrency(netAmount, invoiceData.currency)}
                     </td>
-                    <td className="p-2 text-center border border-gray-300">{vatDisplay}</td>
-                    <td className="p-2 text-right border border-gray-300">
+                    <td className="px-2 py-1.5 text-center border border-gray-300">{vatDisplay}</td>
+                    <td className="px-2 py-1.5 text-right border border-gray-300">
                       {formatCurrency(vatAmount, invoiceData.currency)}
                     </td>
-                      <td className="p-2 text-right border border-gray-300">
+                      <td className="px-2 py-1.5 text-right border border-gray-300">
                         {formatCurrency(grossAmount, invoiceData.currency)}
                       </td>
                     </tr>
@@ -331,14 +337,14 @@ export function InvoicePDFPreview({ invoiceData }: InvoicePDFPreviewProps) {
             </table>
 
             {/* VAT Summary */}
-            <div className="mb-6">
-              <table className="ml-auto w-2/3 text-sm">
+            <div className="mb-5">
+              <table className="ml-auto w-3/5 text-xs">
                 <thead>
                   <tr className="bg-gray-100">
-                    <th className="p-2 text-left border border-gray-300">Stawka VAT</th>
-                    <th className="p-2 text-right border border-gray-300">Wartość netto</th>
-                    <th className="p-2 text-right border border-gray-300">Kwota VAT</th>
-                    <th className="p-2 text-right border border-gray-300">Wartość brutto</th>
+                    <th className="px-2 py-1.5 text-left border border-gray-300">Stawka VAT</th>
+                    <th className="px-2 py-1.5 text-right border border-gray-300">Wartość netto</th>
+                    <th className="px-2 py-1.5 text-right border border-gray-300">Kwota VAT</th>
+                    <th className="px-2 py-1.5 text-right border border-gray-300">Wartość brutto</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -346,14 +352,14 @@ export function InvoicePDFPreview({ invoiceData }: InvoicePDFPreviewProps) {
                     const vatDisplay = getVatLabel(item.rate);
                     return (
                       <tr key={item.rate}>
-                        <td className="p-2 border border-gray-300">{vatDisplay}</td>
-                        <td className="p-2 text-right border border-gray-300">
+                        <td className="px-2 py-1.5 border border-gray-300">{vatDisplay}</td>
+                        <td className="px-2 py-1.5 text-right border border-gray-300">
                           {formatCurrency(item.net, invoiceData.currency)}
                         </td>
-                        <td className="p-2 text-right border border-gray-300">
+                        <td className="px-2 py-1.5 text-right border border-gray-300">
                           {formatCurrency(item.vat, invoiceData.currency)}
                         </td>
-                        <td className="p-2 text-right border border-gray-300">
+                        <td className="px-2 py-1.5 text-right border border-gray-300">
                           {formatCurrency(item.gross, invoiceData.currency)}
                         </td>
                       </tr>
@@ -364,24 +370,24 @@ export function InvoicePDFPreview({ invoiceData }: InvoicePDFPreviewProps) {
             </div>
 
             {/* Totals */}
-            <div className="mb-8">
-              <table className="ml-auto w-2/3 text-sm">
+            <div className="mb-5">
+              <table className="ml-auto w-3/5 text-xs">
                 <tbody>
                   <tr>
-                    <td className="p-2 text-right border border-gray-300">Razem netto:</td>
-                    <td className="p-2 text-right border border-gray-300">
+                    <td className="px-2 py-1.5 text-right border border-gray-300">Razem netto:</td>
+                    <td className="px-2 py-1.5 text-right border border-gray-300">
                       {formatCurrency(calculations.netTotal, invoiceData.currency)}
                     </td>
                   </tr>
                   <tr>
-                    <td className="p-2 text-right border border-gray-300">Razem VAT:</td>
-                    <td className="p-2 text-right border border-gray-300">
+                    <td className="px-2 py-1.5 text-right border border-gray-300">Razem VAT:</td>
+                    <td className="px-2 py-1.5 text-right border border-gray-300">
                       {formatCurrency(calculations.vatTotal, invoiceData.currency)}
                     </td>
                   </tr>
                   <tr className="bg-gray-100">
-                    <td className="p-2 text-right border border-gray-300">Do zapłaty:</td>
-                    <td className="p-2 text-right border border-gray-300">
+                    <td className="px-2 py-1.5 text-right border border-gray-300">Do zapłaty:</td>
+                    <td className="px-2 py-1.5 text-right border border-gray-300">
                       {formatCurrency(calculations.grossTotal, invoiceData.currency)}
                     </td>
                   </tr>
@@ -390,8 +396,8 @@ export function InvoicePDFPreview({ invoiceData }: InvoicePDFPreviewProps) {
             </div>
 
             {shouldShowPlnBreakdown && plnTotals && (
-              <div className="mb-8">
-                <h3 className="mb-2 text-gray-700">Przeliczenie pozycji na PLN</h3>
+              <div className="mb-5">
+                <h3 className="mb-1 text-gray-700 text-sm font-medium uppercase tracking-wide">Przeliczenie pozycji na PLN</h3>
                 <p className="mb-3 text-xs text-gray-500">
                   Kurs średni NBP (tabela A) z dnia {effectiveRateDate || selectedRateDate || '—'} wynosi{' '}
                   {conversionRate?.toFixed(4)} PLN.
@@ -400,18 +406,18 @@ export function InvoicePDFPreview({ invoiceData }: InvoicePDFPreviewProps) {
                     selectedRateDate !== effectiveRateDate &&
                     ` (Wybrana data: ${selectedRateDate})`}
                 </p>
-                <table className="w-full mb-4 text-sm">
+                <table className="w-full mb-4 text-xs">
                   <thead>
                     <tr className="bg-gray-100">
-                      <th className="p-2 text-left border border-gray-300">Lp.</th>
-                      <th className="p-2 text-left border border-gray-300">Nazwa</th>
-                      <th className="p-2 text-center border border-gray-300">Ilość</th>
-                      <th className="p-2 text-center border border-gray-300">Jedn.</th>
-                      <th className="p-2 text-right border border-gray-300">Cena netto (PLN)</th>
-                      <th className="p-2 text-right border border-gray-300">Wartość netto (PLN)</th>
-                      <th className="p-2 text-center border border-gray-300">VAT</th>
-                      <th className="p-2 text-right border border-gray-300">Kwota VAT (PLN)</th>
-                      <th className="p-2 text-right border border-gray-300">Wartość brutto (PLN)</th>
+                      <th className="px-2 py-1.5 text-left border border-gray-300">Lp.</th>
+                      <th className="px-2 py-1.5 text-left border border-gray-300">Nazwa</th>
+                      <th className="px-2 py-1.5 text-center border border-gray-300">Ilość</th>
+                      <th className="px-2 py-1.5 text-center border border-gray-300">Jedn.</th>
+                      <th className="px-2 py-1.5 text-right border border-gray-300">Cena netto (PLN)</th>
+                      <th className="px-2 py-1.5 text-right border border-gray-300">Wartość netto (PLN)</th>
+                      <th className="px-2 py-1.5 text-center border border-gray-300">VAT</th>
+                      <th className="px-2 py-1.5 text-right border border-gray-300">Kwota VAT (PLN)</th>
+                      <th className="px-2 py-1.5 text-right border border-gray-300">Wartość brutto (PLN)</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -419,21 +425,21 @@ export function InvoicePDFPreview({ invoiceData }: InvoicePDFPreviewProps) {
                       const vatDisplay = getVatLabel(item.vatRate);
                       return (
                         <tr key={item.index}>
-                          <td className="p-2 border border-gray-300">{item.index + 1}</td>
-                          <td className="p-2 border border-gray-300">{item.name || '___________'}</td>
-                          <td className="p-2 text-center border border-gray-300">{item.quantity}</td>
-                          <td className="p-2 text-center border border-gray-300">{item.unit}</td>
-                          <td className="p-2 text-right border border-gray-300">
+                          <td className="px-2 py-1.5 border border-gray-300">{item.index + 1}</td>
+                          <td className="px-2 py-1.5 border border-gray-300">{item.name || '___________'}</td>
+                          <td className="px-2 py-1.5 text-center border border-gray-300">{item.quantity}</td>
+                          <td className="px-2 py-1.5 text-center border border-gray-300">{item.unit}</td>
+                          <td className="px-2 py-1.5 text-right border border-gray-300">
                             {formatCurrency(item.netUnitPln, 'PLN')}
                           </td>
-                          <td className="p-2 text-right border border-gray-300">
+                          <td className="px-2 py-1.5 text-right border border-gray-300">
                             {formatCurrency(item.netAmountPln, 'PLN')}
                           </td>
-                          <td className="p-2 text-center border border-gray-300">{vatDisplay}</td>
-                          <td className="p-2 text-right border border-gray-300">
+                          <td className="px-2 py-1.5 text-center border border-gray-300">{vatDisplay}</td>
+                          <td className="px-2 py-1.5 text-right border border-gray-300">
                             {formatCurrency(item.vatAmountPln, 'PLN')}
                           </td>
-                          <td className="p-2 text-right border border-gray-300">
+                          <td className="px-2 py-1.5 text-right border border-gray-300">
                             {formatCurrency(item.grossAmountPln, 'PLN')}
                           </td>
                         </tr>
@@ -441,23 +447,23 @@ export function InvoicePDFPreview({ invoiceData }: InvoicePDFPreviewProps) {
                     })}
                   </tbody>
                 </table>
-                <table className="ml-auto w-2/3 text-sm">
+                <table className="ml-auto w-3/5 text-xs">
                   <tbody>
                     <tr>
-                      <td className="p-2 text-right border border-gray-300">Razem netto (PLN):</td>
-                      <td className="p-2 text-right border border-gray-300">
+                      <td className="px-2 py-1.5 text-right border border-gray-300">Razem netto (PLN):</td>
+                      <td className="px-2 py-1.5 text-right border border-gray-300">
                         {formatCurrency(plnTotals.net, 'PLN')}
                       </td>
                     </tr>
                     <tr>
-                      <td className="p-2 text-right border border-gray-300">Razem VAT (PLN):</td>
-                      <td className="p-2 text-right border border-gray-300">
+                      <td className="px-2 py-1.5 text-right border border-gray-300">Razem VAT (PLN):</td>
+                      <td className="px-2 py-1.5 text-right border border-gray-300">
                         {formatCurrency(plnTotals.vat, 'PLN')}
                       </td>
                     </tr>
                     <tr className="bg-gray-100">
-                      <td className="p-2 text-right border border-gray-300">Do zapłaty (PLN):</td>
-                      <td className="p-2 text-right border border-gray-300">
+                      <td className="px-2 py-1.5 text-right border border-gray-300">Do zapłaty (PLN):</td>
+                      <td className="px-2 py-1.5 text-right border border-gray-300">
                         {formatCurrency(plnTotals.gross, 'PLN')}
                       </td>
                     </tr>
@@ -466,19 +472,11 @@ export function InvoicePDFPreview({ invoiceData }: InvoicePDFPreviewProps) {
               </div>
             )}
 
-            {/* Payment Info */}
-            <div className="mb-6 text-sm">
-              <p className="text-gray-700">Sposób płatności: {invoiceData.paymentMethod}</p>
-              {invoiceData.seller.bankAccount && (
-                <p className="text-gray-700">Numer konta: {invoiceData.seller.bankAccount}</p>
-              )}
-            </div>
-
             {/* Notes */}
             {invoiceData.notes && (
-              <div className="mt-6 pt-4 border-t border-gray-300">
-                <p className="text-sm text-gray-700">Uwagi:</p>
-                <p className="text-sm mt-1">{invoiceData.notes}</p>
+              <div className="mt-4 pt-3 border-t border-gray-300">
+                <p className="text-xs text-gray-700">Uwagi:</p>
+                <p className="text-xs mt-1">{invoiceData.notes}</p>
               </div>
             )}
           </div>

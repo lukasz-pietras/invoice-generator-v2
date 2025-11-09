@@ -314,53 +314,81 @@
         background: white;
         border-radius: 16px;
         border: 1px solid var(--border);
-        padding: 40px;
+        padding: 32px;
         box-shadow: inset 0 0 0 1px rgba(148, 163, 184, 0.1);
         width: 210mm;
         min-height: 297mm;
         box-sizing: border-box;
         margin: 0 auto;
+        font-size: 13px;
+        line-height: 1.45;
       }
 
       .pair {
         display: grid;
-        gap: 20px;
+        gap: 16px;
         grid-template-columns: repeat(2, minmax(0, 1fr));
       }
 
       .info-box {
         background: #f9fafb;
         border: 1px solid rgba(148, 163, 184, 0.35);
-        border-radius: 12px;
-        padding: 16px;
+        border-radius: 10px;
+        padding: 14px;
       }
 
       .info-box h3 {
-        margin: 0 0 8px;
-        font-size: 0.9rem;
+        margin: 0 0 6px;
+        font-size: 0.82rem;
         text-transform: uppercase;
         color: #6b7280;
-        letter-spacing: 0.04em;
+        letter-spacing: 0.05em;
       }
 
       .info-box p {
         margin: 0;
         color: #1f2937;
-        line-height: 1.5;
-        font-size: 0.95rem;
+        line-height: 1.45;
+        font-size: 0.85rem;
+      }
+
+      .details-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px 16px;
+        background: #f3f4f6;
+        border: 1px solid #dbe1ea;
+        border-radius: 10px;
+        padding: 14px 16px;
+        margin: 16px 0 14px;
+      }
+
+      .details-label {
+        margin: 0 0 4px;
+        font-size: 0.65rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: #6b7280;
+      }
+
+      .details-value {
+        margin: 0;
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: #1f2937;
       }
 
       table {
         width: 100%;
         border-collapse: collapse;
-        margin-top: 26px;
-        font-size: 0.9rem;
+        margin-top: 20px;
+        font-size: 0.85rem;
       }
 
       th,
       td {
         border: 1px solid #dbe1ea;
-        padding: 10px;
+        padding: 8px 10px;
         text-align: left;
       }
 
@@ -375,15 +403,15 @@
       }
 
       .summary {
-        margin-top: 24px;
+        margin-top: 18px;
         display: grid;
-        gap: 10px;
+        gap: 8px;
       }
 
       .summary div {
         display: flex;
         justify-content: space-between;
-        font-size: 1rem;
+        font-size: 0.9rem;
       }
 
       .summary div strong {
@@ -391,13 +419,13 @@
       }
 
       .notes {
-        margin-top: 24px;
+        margin-top: 18px;
         border: 1px dashed var(--border);
-        border-radius: 12px;
-        padding: 16px;
-        min-height: 70px;
+        border-radius: 10px;
+        padding: 14px;
+        min-height: 60px;
         background: #f9fafb;
-        font-size: 0.95rem;
+        font-size: 0.85rem;
       }
 
       @media (max-width: 1200px) {
@@ -1315,7 +1343,7 @@
           : "";
         const plnSummaryHtml = showPlnBreakdown
           ? `
-          <div class="summary" style="margin-top:18px;">
+          <div class="summary" style="margin-top:16px;">
             <div style="font-weight:600;">Przeliczenie pozycji na PLN</div>
             <p class="exchange-rate-muted" style="margin-top:6px;">
               Kurs sredni NBP (tabela A) z dnia ${
@@ -1345,7 +1373,7 @@
               <tbody>
                 ${
                   plnRowsHtml ||
-                  `<tr><td colspan="9" style="text-align:center;padding:24px;">Brak pozycji</td></tr>`
+                  `<tr><td colspan="9" style="text-align:center;padding:18px;">Brak pozycji</td></tr>`
                 }
               </tbody>
             </table>
@@ -1358,7 +1386,7 @@
                 <span>Suma VAT (PLN)</span>
                 <strong>${formatCurrency(plnTotals.vat, "PLN")}</strong>
               </div>
-              <div style="font-size:1.1rem;">
+              <div style="font-size:1rem;">
                 <span>Suma brutto (PLN)</span>
                 <strong>${formatCurrency(plnTotals.gross, "PLN")}</strong>
               </div>
@@ -1367,16 +1395,16 @@
         `
           : "";
         preview.innerHTML = `
-          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;">
             <div>
-              <h2 style="font-size:1.4rem;margin:0 0 6px;">Faktura VAT</h2>
+              <h2 style="font-size:1.2rem;margin:0 0 4px;">Faktura VAT</h2>
               <p style="margin:0;color:${state.invoiceNumber ? "#1f2937" : "#9ca3af"};">
                 ${state.invoiceNumber || "Numer faktury"}
               </p>
             </div>
             ${
               state.logo
-                ? `<img src="${state.logo}" alt="Logo" style="max-height:70px;max-width:160px;object-fit:contain;" />`
+                ? `<img src="${state.logo}" alt="Logo" style="max-height:60px;max-width:140px;object-fit:contain;" />`
                 : ""
             }
           </div>
@@ -1401,22 +1429,22 @@
               </p>
             </div>
           </div>
-          <div class="pair" style="margin-top:20px;">
-            <div class="info-box">
-              <h3>Data wystawienia</h3>
-              <p>${formatDate(state.issueDate)}</p>
+          <div class="details-grid">
+            <div>
+              <p class="details-label">Data wystawienia</p>
+              <p class="details-value">${formatDate(state.issueDate) || "brak"}</p>
             </div>
-            <div class="info-box">
-              <h3>Data sprzedazy</h3>
-              <p>${formatDate(state.saleDate)}</p>
+            <div>
+              <p class="details-label">Data sprzedazy</p>
+              <p class="details-value">${formatDate(state.saleDate) || "brak"}</p>
             </div>
-            <div class="info-box">
-              <h3>Termin platnosci</h3>
-              <p>${formatDate(state.paymentDeadline)}</p>
+            <div>
+              <p class="details-label">Termin platnosci</p>
+              <p class="details-value">${formatDate(state.paymentDeadline) || "brak"}</p>
             </div>
-            <div class="info-box">
-              <h3>Metoda platnosci</h3>
-              <p>${state.paymentMethod}</p>
+            <div>
+              <p class="details-label">Metoda platnosci</p>
+              <p class="details-value">${state.paymentMethod || "brak"}</p>
             </div>
           </div>
           <table>
@@ -1457,7 +1485,7 @@
                         `;
                       })
                       .join("")
-                  : `<tr><td colspan="9" style="text-align:center;padding:24px;">Brak pozycji</td></tr>`
+                  : `<tr><td colspan="9" style="text-align:center;padding:18px;">Brak pozycji</td></tr>`
               }
             </tbody>
           </table>
@@ -1470,12 +1498,12 @@
               <span>Suma VAT</span>
               <strong>${formatCurrency(totals.vatTotal)}</strong>
             </div>
-            <div style="font-size:1.1rem;">
+            <div style="font-size:1rem;">
               <span>Suma brutto</span>
               <strong>${formatCurrency(totals.grossTotal)}</strong>
             </div>
           </div>
-          <div class="summary" style="margin-top:18px;">
+          <div class="summary" style="margin-top:16px;">
             <div style="font-weight:600;">Zestawienie VAT</div>
             <table>
               <thead>
