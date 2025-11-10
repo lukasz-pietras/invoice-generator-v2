@@ -134,6 +134,22 @@
         grid-template-columns: repeat(2, minmax(0, 1fr));
       }
 
+      .grid.three {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      @media (max-width: 900px) {
+        .grid.three {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+      }
+
+      @media (max-width: 640px) {
+        .grid.three {
+          grid-template-columns: 1fr;
+        }
+      }
+
       .note-buttons {
         display: flex;
         flex-wrap: wrap;
@@ -609,32 +625,43 @@
                   Zapisz
                 </button>
               </div>
-              <div class="grid">
-                <label>
-                  Nazwa
-                  <input type="text" data-field="seller.name" placeholder="Nazwa firmy" />
+              <div class="grid" data-party="seller">
+                <label data-field-container="seller.name">
+                  <span class="field-label" data-label="seller.name">Company name</span>
+                  <input type="text" data-field="seller.name" placeholder="Company name" />
                 </label>
-                <label>
-                  Adres
-                  <input type="text" data-field="seller.address" placeholder="Ulica i numer" />
+                <label data-field-container="seller.country">
+                  <span class="field-label" data-label="seller.country">Country</span>
+                  <select data-field="seller.country">
+                    <option value="USA" selected>United States</option>
+                    <option value="POL">Polska</option>
+                  </select>
                 </label>
-                <div class="grid two">
-                  <label>
-                    Kod pocztowy
-                    <input type="text" data-field="seller.postalCode" placeholder="00-000" />
+                <label data-field-container="seller.address">
+                  <span class="field-label" data-label="seller.address">Street address</span>
+                  <input type="text" data-field="seller.address" placeholder="123 Main St" />
+                </label>
+                <div class="grid three location-grid" data-field-container="seller.location">
+                  <label data-field-container="seller.postalCode">
+                    <span class="field-label" data-label="seller.postalCode">ZIP Code</span>
+                    <input type="text" data-field="seller.postalCode" placeholder="12345" inputmode="numeric" />
                   </label>
-                  <label>
-                    Miasto
-                    <input type="text" data-field="seller.city" placeholder="Miasto" />
+                  <label data-field-container="seller.city">
+                    <span class="field-label" data-label="seller.city">City</span>
+                    <input type="text" data-field="seller.city" placeholder="City" />
+                  </label>
+                  <label data-field-container="seller.state">
+                    <span class="field-label" data-label="seller.state">State</span>
+                    <input type="text" data-field="seller.state" placeholder="CA" />
                   </label>
                 </div>
-                <label>
-                  NIP
-                  <input type="text" data-field="seller.nip" placeholder="0000000000" />
+                <label data-field-container="seller.nip">
+                  <span class="field-label" data-label="seller.nip">Tax ID (EIN)</span>
+                  <input type="text" data-field="seller.nip" placeholder="12-3456789" />
                 </label>
-                <label>
-                  Numer konta
-                  <input type="text" data-field="seller.bankAccount" placeholder="00 0000 0000 0000 0000 0000 0000" />
+                <label data-field-container="seller.bankAccount">
+                  <span class="field-label" data-label="seller.bankAccount">Bank account</span>
+                  <input type="text" data-field="seller.bankAccount" placeholder="Account number" />
                 </label>
               </div>
             </div>
@@ -648,28 +675,39 @@
                   Zapisz
                 </button>
               </div>
-              <div class="grid">
-                <label>
-                  Nazwa
-                  <input type="text" data-field="buyer.name" placeholder="Nazwa firmy" />
+              <div class="grid" data-party="buyer">
+                <label data-field-container="buyer.name">
+                  <span class="field-label" data-label="buyer.name">Company name</span>
+                  <input type="text" data-field="buyer.name" placeholder="Company name" />
                 </label>
-                <label>
-                  Adres
-                  <input type="text" data-field="buyer.address" placeholder="Ulica i numer" />
+                <label data-field-container="buyer.country">
+                  <span class="field-label" data-label="buyer.country">Country</span>
+                  <select data-field="buyer.country">
+                    <option value="USA" selected>United States</option>
+                    <option value="POL">Polska</option>
+                  </select>
                 </label>
-                <div class="grid two">
-                  <label>
-                    Kod pocztowy
-                    <input type="text" data-field="buyer.postalCode" placeholder="00-000" />
+                <label data-field-container="buyer.address">
+                  <span class="field-label" data-label="buyer.address">Street address</span>
+                  <input type="text" data-field="buyer.address" placeholder="123 Main St" />
+                </label>
+                <div class="grid three location-grid" data-field-container="buyer.location">
+                  <label data-field-container="buyer.postalCode">
+                    <span class="field-label" data-label="buyer.postalCode">ZIP Code</span>
+                    <input type="text" data-field="buyer.postalCode" placeholder="12345" inputmode="numeric" />
                   </label>
-                  <label>
-                    Miasto
-                    <input type="text" data-field="buyer.city" placeholder="Miasto" />
+                  <label data-field-container="buyer.city">
+                    <span class="field-label" data-label="buyer.city">City</span>
+                    <input type="text" data-field="buyer.city" placeholder="City" />
+                  </label>
+                  <label data-field-container="buyer.state">
+                    <span class="field-label" data-label="buyer.state">State</span>
+                    <input type="text" data-field="buyer.state" placeholder="CA" />
                   </label>
                 </div>
-                <label>
-                  NIP
-                  <input type="text" data-field="buyer.nip" placeholder="0000000000" />
+                <label data-field-container="buyer.nip">
+                  <span class="field-label" data-label="buyer.nip">Tax ID (EIN)</span>
+                  <input type="text" data-field="buyer.nip" placeholder="12-3456789" />
                 </label>
               </div>
             </div>
@@ -784,17 +822,21 @@
         currency: "PLN",
         seller: {
           name: "",
+          country: "USA",
           address: "",
           postalCode: "",
           city: "",
+          state: "",
           nip: "",
           bankAccount: "",
         },
         buyer: {
           name: "",
+          country: "USA",
           address: "",
           postalCode: "",
           city: "",
+          state: "",
           nip: "",
         },
         items: [
@@ -823,6 +865,82 @@
         seller: storageSnapshot.data.seller || {},
         buyer: storageSnapshot.data.buyer || {},
       };
+      const DEFAULT_COUNTRY = "USA";
+      const COUNTRY_ALIASES = {
+        US: "USA",
+        "U.S.": "USA",
+        "U.S.A.": "USA",
+        "UNITED STATES": "USA",
+        "UNITED STATES OF AMERICA": "USA",
+        AMERICA: "USA",
+        PL: "POL",
+        POLAND: "POL",
+        "RZECZPOSPOLITA POLSKA": "POL",
+      };
+      const COUNTRY_CONFIG = {
+        USA: {
+          code: "USA",
+          label: "United States",
+          countryName: "United States",
+          fieldLabels: {
+            name: "Company name",
+            country: "Country",
+            address: "Street address",
+            postalCode: "ZIP Code",
+            city: "City",
+            state: "State",
+            nip: "Tax ID (EIN)",
+            bankAccount: "Bank account",
+          },
+          placeholders: {
+            name: "Company name",
+            country: "United States",
+            address: "123 Main St",
+            postalCode: "12345",
+            city: "New York",
+            state: "NY",
+            nip: "12-3456789",
+            bankAccount: "Account number",
+          },
+          postalPattern: "^\\d{5}(?:-\\d{4})?$",
+          postalInputMode: "numeric",
+          showState: true,
+          requireState: true,
+          showCountryLine: true,
+          showBankAccount: true,
+        },
+        POL: {
+          code: "POL",
+          label: "Polska",
+          countryName: "Polska",
+          fieldLabels: {
+            name: "Nazwa",
+            country: "Kraj",
+            address: "Adres",
+            postalCode: "Kod pocztowy",
+            city: "Miasto",
+            state: "Województwo",
+            nip: "NIP",
+            bankAccount: "Numer konta",
+          },
+          placeholders: {
+            name: "Nazwa",
+            country: "Polska",
+            address: "Ulica i numer",
+            postalCode: "00-000",
+            city: "Miasto",
+            state: "",
+            nip: "0000000000",
+            bankAccount: "00 0000 0000 0000 0000 0000 0000",
+          },
+          postalPattern: "^\\d{2}-\\d{3}$",
+          postalInputMode: "text",
+          showState: false,
+          requireState: false,
+          showCountryLine: false,
+          showBankAccount: true,
+        },
+      };
       if (storageSnapshot.migrated) {
         persistStorage();
       }
@@ -850,8 +968,8 @@
             const parsed = JSON.parse(raw);
             return {
               data: {
-                seller: normalizeRecord(parsed.seller),
-                buyer: normalizeRecord(parsed.buyer),
+                seller: normalizeRecord(parsed.seller, "seller"),
+                buyer: normalizeRecord(parsed.buyer, "buyer"),
               },
               migrated: false,
             };
@@ -860,8 +978,8 @@
           console.warn("Nie udalo sie odczytac", error);
         }
 
-        const legacySeller = readLegacy("savedSellers");
-        const legacyBuyer = readLegacy("savedBuyers");
+        const legacySeller = readLegacy("savedSellers", "seller");
+        const legacyBuyer = readLegacy("savedBuyers", "buyer");
         const migrated =
           Object.keys(legacySeller).length > 0 || Object.keys(legacyBuyer).length > 0;
 
@@ -1078,19 +1196,19 @@
         }
       }
 
-      function readLegacy(key) {
+      function readLegacy(key, type) {
         try {
           const raw = localStorage.getItem(key);
           if (!raw) return {};
           const parsed = JSON.parse(raw);
-          return normalizeRecord(parsed);
+          return normalizeRecord(parsed, type);
         } catch (error) {
           console.warn("Nie udalo sie odczytac z legacy", error);
-          return {};
         }
+        return {};
       }
 
-      function normalizeRecord(input) {
+      function normalizeRecord(input, type) {
         if (!input) return {};
         if (Array.isArray(input)) {
           const map = {};
@@ -1099,7 +1217,7 @@
             if (entry.name) {
               const payload = entry.data ? { ...entry.data } : { ...entry };
               payload.name = payload.name || entry.name;
-              map[entry.name] = payload;
+              map[entry.name] = normalizePartyRecord(payload, type);
             }
           });
           return map;
@@ -1110,11 +1228,350 @@
             if (!value) return;
             const payload = value.data ? { ...value.data } : { ...value };
             payload.name = payload.name || key;
-            map[key] = payload;
+            map[key] = normalizePartyRecord(payload, type);
           });
           return map;
         }
         return {};
+      }
+
+      function normalizeCountry(value) {
+        if (value === null || value === undefined) {
+          return DEFAULT_COUNTRY;
+        }
+        const raw = String(value).trim().toUpperCase();
+        if (!raw) {
+          return DEFAULT_COUNTRY;
+        }
+        if (COUNTRY_CONFIG[raw]) {
+          return raw;
+        }
+        if (COUNTRY_ALIASES[raw]) {
+          return COUNTRY_ALIASES[raw];
+        }
+        return DEFAULT_COUNTRY;
+      }
+
+      function formatPostalCode(value, country) {
+        if (value === null || value === undefined) {
+          return "";
+        }
+        const normalizedCountry = normalizeCountry(country);
+        const raw = String(value).trim();
+        if (!raw) {
+          return "";
+        }
+        if (normalizedCountry === "USA") {
+          const digits = raw.replace(/\D/g, "").slice(0, 9);
+          if (digits.length > 5) {
+            return `${digits.slice(0, 5)}-${digits.slice(5)}`;
+          }
+          return digits;
+        }
+        if (normalizedCountry === "POL") {
+          if (/^\d{2}-\d{3}$/.test(raw)) {
+            return raw;
+          }
+          const digits = raw.replace(/\D/g, "").slice(0, 5);
+          if (digits.length === 5) {
+            return `${digits.slice(0, 2)}-${digits.slice(2)}`;
+          }
+          return digits;
+        }
+        return raw;
+      }
+
+      function formatStateValue(value, country) {
+        if (value === null || value === undefined) {
+          return "";
+        }
+        const normalizedCountry = normalizeCountry(country);
+        const raw = String(value).trim();
+        if (!raw) {
+          return "";
+        }
+        if (normalizedCountry === "USA") {
+          return raw.toUpperCase();
+        }
+        return raw;
+      }
+
+      function formatTaxId(value, country) {
+        if (value === null || value === undefined) {
+          return "";
+        }
+        const normalizedCountry = normalizeCountry(country);
+        const raw = String(value).trim();
+        if (!raw) {
+          return "";
+        }
+        if (normalizedCountry === "USA") {
+          const digits = raw.replace(/\D/g, "").slice(0, 9);
+          if (digits.length <= 2) {
+            return digits;
+          }
+          return `${digits.slice(0, 2)}-${digits.slice(2)}`;
+        }
+        return raw;
+      }
+
+      function normalizePartyRecord(input, type) {
+        const record = input ? { ...input } : {};
+        const normalized = {
+          name: (record.name || "").toString().trim(),
+          country:
+            record.country ??
+            record.countryCode ??
+            record.country_code ??
+            record.countryName ??
+            record.country_name ??
+            DEFAULT_COUNTRY,
+          address: (record.address || "").toString().trim(),
+          postalCode: (
+            record.postalCode ??
+            record.post_code ??
+            record.zip ??
+            record.zipCode ??
+            record.zip_code ??
+            ""
+          )
+            .toString()
+            .trim(),
+          city: (record.city || record.town || "").toString().trim(),
+          state: (
+            record.state ||
+            record.stateCode ||
+            record.state_code ||
+            record.region ||
+            record.province ||
+            record.voivodeship ||
+            ""
+          )
+            .toString()
+            .trim(),
+          nip: (
+            record.nip ||
+            record.taxId ||
+            record.tax_id ||
+            record.taxNumber ||
+            record.tax_number ||
+            record.vat ||
+            record.vatId ||
+            record.vat_id ||
+            ""
+          )
+            .toString()
+            .trim(),
+        };
+        normalized.country = normalizeCountry(normalized.country);
+        if (
+          !record.country &&
+          normalized.country === DEFAULT_COUNTRY &&
+          /^\d{2}-\d{3}$/.test(normalized.postalCode)
+        ) {
+          normalized.country = "POL";
+        }
+        if (
+          !record.country &&
+          normalized.country === DEFAULT_COUNTRY &&
+          normalized.nip &&
+          normalized.nip.replace(/\D/g, "").length === 10
+        ) {
+          normalized.country = "POL";
+        }
+        normalized.postalCode = formatPostalCode(normalized.postalCode, normalized.country);
+        normalized.state = formatStateValue(normalized.state, normalized.country);
+        normalized.nip = formatTaxId(normalized.nip, normalized.country);
+        if (normalized.country === "POL" && !normalized.postalCode && normalized.address) {
+          const match = normalized.address.match(/^(.*?)(\d{2}-\d{3})\s+(.+)$/);
+          if (match) {
+            normalized.address = match[1].trim();
+            normalized.postalCode = match[2];
+            if (!normalized.city) {
+              normalized.city = match[3];
+            }
+          }
+        }
+        if (type === "seller") {
+          normalized.bankAccount = (
+            record.bankAccount ||
+            record.account ||
+            record.bank_account ||
+            ""
+          )
+            .toString()
+            .trim();
+        }
+        return normalized;
+      }
+
+      function getCountryConfig(countryCode) {
+        const normalized = normalizeCountry(countryCode);
+        return COUNTRY_CONFIG[normalized] || COUNTRY_CONFIG[DEFAULT_COUNTRY];
+      }
+
+      function formatPartyLocation(party) {
+        const config = getCountryConfig(party?.country);
+        const city = (party?.city || "").toString().trim();
+        const stateValue = (party?.state || "").toString().trim();
+        const postalCode = (party?.postalCode || "").toString().trim();
+        if (config.code === "USA") {
+          const cityPart = city;
+          const stateZip = [stateValue, postalCode].filter(Boolean).join(" ").trim();
+          if (cityPart && stateZip) {
+            return `${cityPart}, ${stateZip}`.trim();
+          }
+          return cityPart || stateZip || "";
+        }
+        const parts = [postalCode, city].filter(Boolean);
+        return parts.join(" ").trim();
+      }
+
+      function formatPartyCountryLine(party, { fallback = false } = {}) {
+        const config = getCountryConfig(party?.country);
+        if (!config.showCountryLine) {
+          return "";
+        }
+        if (party?.country) {
+          return config.countryName || config.label || normalizeCountry(party.country);
+        }
+        return fallback ? config.countryName || config.label || "" : "";
+      }
+
+      function buildPartyPreviewHtml(party, type) {
+        const config = getCountryConfig(party?.country);
+        const placeholders = config.placeholders || {};
+        const name = (party?.name || "").toString().trim() || placeholders.name || "";
+        const address = (party?.address || "").toString().trim() || placeholders.address || "";
+        let location = formatPartyLocation(party);
+        if (!location) {
+          location = formatPartyLocation({
+            country: config.code,
+            city: placeholders.city,
+            state: placeholders.state,
+            postalCode: placeholders.postalCode,
+          });
+        }
+        let countryLine = formatPartyCountryLine(party);
+        if (!countryLine) {
+          countryLine = formatPartyCountryLine(party, { fallback: true });
+        }
+        const taxLabel = config.fieldLabels?.nip || "Tax ID";
+        const taxValue =
+          (party?.nip || "").toString().trim() || placeholders.nip || "";
+        const lines = [];
+        if (name) lines.push(name);
+        if (address) lines.push(address);
+        if (location) lines.push(location);
+        if (countryLine) lines.push(countryLine);
+        lines.push(`${taxLabel}: ${taxValue}`);
+        if (type === "seller") {
+          const bankLabel = config.fieldLabels?.bankAccount || "Bank account";
+          const bankValue = (party?.bankAccount || "").toString().trim();
+          if (bankValue) {
+            lines.push(`${bankLabel}: ${bankValue}`);
+          }
+        }
+        return lines.join("<br/>");
+      }
+
+      function applyCountryFormatting(type) {
+        const party = state[type];
+        if (!party) return;
+        party.country = normalizeCountry(party.country);
+        party.postalCode = formatPostalCode(party.postalCode, party.country);
+        party.state = formatStateValue(party.state, party.country);
+        party.nip = formatTaxId(party.nip, party.country);
+        const countryInput = document.querySelector(`[data-field='${type}.country']`);
+        if (countryInput && countryInput.value !== party.country) {
+          countryInput.value = party.country;
+        }
+        const postalInput = document.querySelector(`[data-field='${type}.postalCode']`);
+        if (postalInput && postalInput.value !== party.postalCode) {
+          postalInput.value = party.postalCode;
+        }
+        const stateInput = document.querySelector(`[data-field='${type}.state']`);
+        if (stateInput && stateInput.value !== party.state) {
+          stateInput.value = party.state;
+        }
+        const taxInput = document.querySelector(`[data-field='${type}.nip']`);
+        if (taxInput && taxInput.value !== party.nip) {
+          taxInput.value = party.nip;
+        }
+      }
+
+      function updatePartyForm(type) {
+        const party = state[type];
+        if (!party) return;
+        const config = getCountryConfig(party.country);
+        const placeholders = config.placeholders || {};
+        const labels = config.fieldLabels || {};
+        const fields = ["name", "country", "address", "postalCode", "city", "state", "nip"];
+        if (type === "seller") {
+          fields.push("bankAccount");
+        }
+        fields.forEach((field) => {
+          const labelElement = document.querySelector(`[data-label='${type}.${field}']`);
+          if (labelElement && labels[field]) {
+            labelElement.textContent = labels[field];
+          }
+          const fieldElement = document.querySelector(`[data-field='${type}.${field}']`);
+          if (
+            fieldElement &&
+            fieldElement.tagName === "INPUT" &&
+            field !== "country" &&
+            placeholders[field]
+          ) {
+            fieldElement.placeholder = placeholders[field];
+          }
+        });
+        const postalInput = document.querySelector(`[data-field='${type}.postalCode']`);
+        if (postalInput) {
+          if (config.postalPattern) {
+            postalInput.setAttribute("pattern", config.postalPattern);
+          } else {
+            postalInput.removeAttribute("pattern");
+          }
+          if (config.postalInputMode) {
+            postalInput.setAttribute("inputmode", config.postalInputMode);
+          } else {
+            postalInput.removeAttribute("inputmode");
+          }
+        }
+        const stateContainer = document.querySelector(`[data-field-container='${type}.state']`);
+        if (stateContainer) {
+          stateContainer.hidden = !config.showState;
+        }
+        const stateInput = document.querySelector(`[data-field='${type}.state']`);
+        if (stateInput) {
+          if (placeholders.state !== undefined) {
+            stateInput.placeholder = placeholders.state;
+          }
+          if (config.requireState) {
+            stateInput.setAttribute("required", "required");
+          } else {
+            stateInput.removeAttribute("required");
+          }
+        }
+        const taxInput = document.querySelector(`[data-field='${type}.nip']`);
+        if (taxInput) {
+          if (config.code === "USA") {
+            taxInput.setAttribute("pattern", "^\\d{2}-\\d{7}$");
+            taxInput.setAttribute("inputmode", "numeric");
+          } else if (config.code === "POL") {
+            taxInput.setAttribute("pattern", "^\\d{10}$");
+            taxInput.setAttribute("inputmode", "numeric");
+          } else {
+            taxInput.removeAttribute("pattern");
+            taxInput.removeAttribute("inputmode");
+          }
+        }
+        if (type === "seller") {
+          const bankContainer = document.querySelector(`[data-field-container='${type}.bankAccount']`);
+          if (bankContainer) {
+            bankContainer.hidden = !config.showBankAccount;
+          }
+        }
       }
 
       function setNested(path, value) {
@@ -1184,7 +1641,46 @@
           return;
         }
 
-        const parsedValue = type === "number" ? parseFloat(value) || 0 : value;
+        const [rootKey, ...segments] = path.split(".");
+        const fieldKey = segments.join(".");
+        if (
+          (rootKey === "seller" || rootKey === "buyer") &&
+          fieldKey === "country"
+        ) {
+          const normalized = normalizeCountry(value);
+          state[rootKey].country = normalized;
+          event.target.value = normalized;
+          applyCountryFormatting(rootKey);
+          updatePartyForm(rootKey);
+          renderPreview();
+          return;
+        }
+
+        let parsedValue =
+          type === "number" ? parseFloat(value) || 0 : value;
+
+        if (rootKey === "seller" || rootKey === "buyer") {
+          const country = state[rootKey]?.country;
+          if (fieldKey === "postalCode") {
+            parsedValue = formatPostalCode(parsedValue, country);
+            setNested(path, parsedValue);
+            event.target.value = parsedValue;
+            return;
+          }
+          if (fieldKey === "state") {
+            parsedValue = formatStateValue(parsedValue, country);
+            setNested(path, parsedValue);
+            event.target.value = parsedValue;
+            return;
+          }
+          if (fieldKey === "nip") {
+            parsedValue = formatTaxId(parsedValue, country);
+            setNested(path, parsedValue);
+            event.target.value = parsedValue;
+            return;
+          }
+        }
+
         setNested(path, parsedValue);
 
       }
@@ -1449,20 +1945,13 @@
             <div class="info-box">
               <h3>Sprzedawca</h3>
               <p>
-                ${state.seller.name || "Nazwa"}<br/>
-                ${state.seller.address || "Adres"}<br/>
-                ${(state.seller.postalCode || "00-000") + " " + (state.seller.city || "Miasto")}<br/>
-                NIP: ${state.seller.nip || "0000000000"}<br/>
-                ${state.seller.bankAccount ? "Konto: " + state.seller.bankAccount : ""}
+                ${buildPartyPreviewHtml(state.seller, "seller")}
               </p>
             </div>
             <div class="info-box">
               <h3>Nabywca</h3>
               <p>
-                ${state.buyer.name || "Nazwa"}<br/>
-                ${state.buyer.address || "Adres"}<br/>
-                ${(state.buyer.postalCode || "00-000") + " " + (state.buyer.city || "Miasto")}<br/>
-                NIP: ${state.buyer.nip || "0000000000"}
+                ${buildPartyPreviewHtml(state.buyer, "buyer")}
               </p>
             </div>
           </div>
@@ -1746,45 +2235,13 @@
       }
 
       function mapImportedCompany(type, data) {
-        const record = {
-          name: (data.name || "").toString().trim(),
-          address: (data.address || "").toString().trim(),
-          postalCode: (data.postalCode || data.post_code || "").toString().trim(),
-          city: (data.city || "").toString().trim(),
-          nip: (data.nip || "").toString().trim(),
-        };
-
-        if (type === "seller") {
-          record.bankAccount = (
-            data.account ||
-            data.bankAccount ||
-            data.bank_account ||
-            ""
-          )
-            .toString()
-            .trim();
-        }
-
-        if (record.address) {
-          const match = record.address.match(/^(.*?)(\d{2}-\d{3})\s+(.+)$/);
-          if (match) {
-            record.address = match[1].trim();
-            if (!record.postalCode) {
-              record.postalCode = match[2];
-            }
-            if (!record.city) {
-              record.city = match[3];
-            }
-          }
-        }
-
-        if (type !== "seller") {
-          delete record.bankAccount;
-        } else if (!record.bankAccount) {
-          record.bankAccount = "";
-        }
-
-        return record;
+        return normalizePartyRecord(
+          {
+            ...data,
+            name: (data?.name || "").toString().trim(),
+          },
+          type
+        );
       }
 
       function handleSelectChange(type) {
@@ -1806,23 +2263,33 @@
 
         Object.entries(storedData.seller).forEach(([name, record]) => {
           if (!record) return;
+          const normalized = normalizePartyRecord(record, "seller");
           const entry = {
-            name: record.name || name,
-            nip: record.nip || "",
-            address: buildExportAddress(record),
+            name: normalized.name || name,
+            nip: normalized.nip || "",
+            address: buildExportAddress(normalized),
+            postalCode: normalized.postalCode || "",
+            city: normalized.city || "",
+            state: normalized.state || "",
+            country: normalized.country,
           };
-          if (record.bankAccount) {
-            entry.account = record.bankAccount;
+          if (normalized.bankAccount) {
+            entry.account = normalized.bankAccount;
           }
           payload.seller[name] = entry;
         });
 
         Object.entries(storedData.buyer).forEach(([name, record]) => {
           if (!record) return;
+          const normalized = normalizePartyRecord(record, "buyer");
           payload.buyer[name] = {
-            name: record.name || name,
-            nip: record.nip || "",
-            address: buildExportAddress(record),
+            name: normalized.name || name,
+            nip: normalized.nip || "",
+            address: buildExportAddress(normalized),
+            postalCode: normalized.postalCode || "",
+            city: normalized.city || "",
+            state: normalized.state || "",
+            country: normalized.country,
           };
         });
 
@@ -1841,22 +2308,25 @@
 
       function buildExportAddress(record) {
         if (!record) return "";
+        const normalized = normalizePartyRecord(record, "buyer");
         const parts = [];
-        if (record.address) {
-          parts.push(String(record.address).trim());
+        if (normalized.address) {
+          parts.push(normalized.address);
         }
-        const location = [record.postalCode, record.city]
-          .filter(Boolean)
-          .map((value) => String(value).trim())
-          .filter(Boolean)
-          .join(" ");
+        const location = formatPartyLocation(normalized);
         if (location) {
           parts.push(location);
         }
-        return parts.join(" ").replace(/\s+/g, " ").trim();
+        const countryLine = formatPartyCountryLine(normalized);
+        if (countryLine) {
+          parts.push(countryLine);
+        }
+        return parts.join(", ").replace(/\s+/g, " ").trim();
       }
 
       function syncForm() {
+        applyCountryFormatting("seller");
+        applyCountryFormatting("buyer");
         document.querySelectorAll("[data-field]").forEach((input) => {
           const path = input.dataset.field;
           const keys = path.split(".");
@@ -1868,6 +2338,8 @@
             input.value = value ?? "";
           }
         });
+        updatePartyForm("seller");
+        updatePartyForm("buyer");
         const sellerSelect = document.getElementById("seller-select");
         const buyerSelect = document.getElementById("buyer-select");
         if (sellerSelect) {
